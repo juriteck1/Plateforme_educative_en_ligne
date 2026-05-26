@@ -637,4 +637,5 @@ function StatutBadge({ statut }: { statut: string }) {
       {labels[statut] || statut}
     </span>
   )
+  
 }
