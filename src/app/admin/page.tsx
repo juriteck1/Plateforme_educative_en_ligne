@@ -32,7 +32,7 @@ interface EnseignantAvecClasses extends Profile {
   classes: { id: string; nom: string; nb_eleves: number }[]
 }
 
-interface SessionRecente extends Session {
+interface SessionRecente extends Omit<Session, 'classe'> {
   classe?: { nom: string }
 }
 
