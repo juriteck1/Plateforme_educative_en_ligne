@@ -167,48 +167,49 @@ export default function SalleEnseignantPage() {
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
       {/* Barre du haut */}
-      <header className="bg-gray-800 border-b border-gray-700 px-4 py-3 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+      <header className="bg-gray-800 border-b border-gray-700 px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
           <button
             onClick={() => router.push('/dashboard')}
-            className="flex items-center gap-1.5 text-gray-400 hover:text-white transition text-sm mr-1"
-            title="Retour au tableau de bord (le cours continue)"
+            className="flex items-center gap-1 text-gray-400 hover:text-white transition text-sm shrink-0"
+            title="Retour au tableau de bord"
           >
             <ArrowLeft size={16} />
             <span className="hidden sm:inline">Dashboard</span>
           </button>
-          <div className="w-px h-5 bg-gray-600" />
-          <BookOpen className="text-indigo-400" size={20} />
-          <span className="text-white font-semibold">{session.titre}</span>
+          <div className="w-px h-5 bg-gray-600 shrink-0" />
+          <BookOpen className="text-indigo-400 shrink-0" size={18} />
+          <span className="text-white font-semibold truncate text-sm sm:text-base">{session.titre}</span>
           <StatutBadge statut={session.statut} />
         </div>
-        <div className="flex items-center gap-2">
-          <span className="text-gray-400 text-sm flex items-center gap-1">
-            <Users size={14} />
-            {presences.length} élève{presences.length > 1 ? 's' : ''}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+          <span className="text-gray-400 text-xs sm:text-sm flex items-center gap-1">
+            <Users size={13} />
+            <span className="hidden sm:inline">{presences.length} élève{presences.length > 1 ? 's' : ''}</span>
+            <span className="sm:hidden">{presences.length}</span>
           </span>
           {session.statut === 'en_cours' && (
             <button onClick={() => changerStatut('pause')}
-              className="flex items-center gap-1.5 bg-yellow-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-yellow-600 transition">
-              <Pause size={14} /> Pause
+              className="flex items-center gap-1 bg-yellow-500 text-white px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-yellow-600 transition">
+              <Pause size={13} /> <span className="hidden sm:inline">Pause</span>
             </button>
           )}
           {session.statut === 'pause' && (
             <button onClick={() => changerStatut('en_cours')}
-              className="flex items-center gap-1.5 bg-green-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-green-600 transition">
-              <Play size={14} /> Reprendre
+              className="flex items-center gap-1 bg-green-500 text-white px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-green-600 transition">
+              <Play size={13} /> <span className="hidden sm:inline">Reprendre</span>
             </button>
           )}
           <button onClick={() => changerStatut('terminee')}
-            className="flex items-center gap-1.5 bg-red-500 text-white px-3 py-1.5 rounded-lg text-sm font-medium hover:bg-red-600 transition">
-            <Square size={14} /> Terminer
+            className="flex items-center gap-1 bg-red-500 text-white px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-red-600 transition">
+            <Square size={13} /> <span className="hidden sm:inline">Terminer</span>
           </button>
         </div>
       </header>
 
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-col md:flex-row flex-1 md:overflow-hidden">
         {/* Zone principale — Dashboard session */}
-        <div className="flex-1 flex flex-col overflow-y-auto bg-gray-900 relative">
+        <div className="flex-1 flex flex-col overflow-y-auto bg-gray-900 relative min-h-[50vh] md:min-h-0">
           {session.statut === 'pause' && (
             <div className="absolute inset-0 bg-gray-900/80 backdrop-blur-sm flex items-center justify-center z-10">
               <div className="text-center">
@@ -232,7 +233,7 @@ export default function SalleEnseignantPage() {
         </div>
 
         {/* Panneau latéral */}
-        <div className="w-96 bg-gray-800 flex flex-col border-l border-gray-700">
+        <div className="w-full md:w-96 bg-gray-800 flex flex-col border-t md:border-t-0 md:border-l border-gray-700 md:overflow-hidden">
           {/* Onglets */}
           {(() => {
             const sections = session.sections_actives || []

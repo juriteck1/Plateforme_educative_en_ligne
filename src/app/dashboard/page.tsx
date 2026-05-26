@@ -83,20 +83,21 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-indigo-600" size={24} />
-            <span className="font-bold text-gray-800">L&apos;École du Savoir</span>
+        <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 shrink-0">
+            <BookOpen className="text-indigo-600" size={22} />
+            <span className="font-bold text-gray-800 hidden sm:inline">L&apos;École du Savoir</span>
+            <span className="font-bold text-gray-800 sm:hidden">EdS</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 sm:gap-4">
             <Link
               href="/dashboard/bibliotheque"
               className="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 text-sm font-medium transition"
             >
               <Library size={16} />
-              Bibliothèque
+              <span className="hidden sm:inline">Bibliothèque</span>
             </Link>
-            <span className="text-gray-600 text-sm">
+            <span className="text-gray-600 text-sm hidden sm:inline">
               Bonjour, <strong>{profile?.prenom}</strong>
             </span>
             <button
@@ -119,23 +120,23 @@ export default function DashboardPage() {
             <Link
               key={session.id}
               href={`/session/${session.id}/enseignant`}
-              className="flex items-center justify-between bg-green-500 text-white rounded-2xl px-5 py-4 mb-6 hover:bg-green-600 transition shadow-lg shadow-green-200 group"
+              className="flex items-center justify-between bg-green-500 text-white rounded-2xl px-4 sm:px-5 py-4 mb-6 hover:bg-green-600 transition shadow-lg shadow-green-200 group gap-3"
             >
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center">
-                  <Radio size={20} className="animate-pulse" />
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="w-9 h-9 sm:w-10 sm:h-10 bg-white/20 rounded-xl flex items-center justify-center shrink-0">
+                  <Radio size={18} className="animate-pulse" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-xs font-semibold text-green-100 uppercase tracking-wide">
-                    {session.statut === 'pause' ? '⏸ Cours en pause' : '● Cours en direct'}
+                    {session.statut === 'pause' ? '⏸ En pause' : '● En direct'}
                   </p>
-                  <p className="font-bold text-lg leading-tight">
+                  <p className="font-bold text-base leading-tight truncate">
                     {session.titre}
-                    {classe && <span className="font-normal opacity-80"> — {classe.nom}</span>}
+                    {classe && <span className="font-normal opacity-80 hidden sm:inline"> — {classe.nom}</span>}
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition px-4 py-2 rounded-xl font-bold text-sm shrink-0">
+              <div className="flex items-center gap-2 bg-white/20 hover:bg-white/30 transition px-3 sm:px-4 py-2 rounded-xl font-bold text-sm shrink-0">
                 <Play size={15} />
                 Reprendre
               </div>
@@ -144,17 +145,18 @@ export default function DashboardPage() {
         })}
 
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 gap-3">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Mes classes</h1>
-            <p className="text-gray-500 mt-1">{classes.length} classe{classes.length > 1 ? 's' : ''} créée{classes.length > 1 ? 's' : ''}</p>
+            <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Mes classes</h1>
+            <p className="text-gray-500 mt-1 text-sm">{classes.length} classe{classes.length > 1 ? 's' : ''} créée{classes.length > 1 ? 's' : ''}</p>
           </div>
           <button
             onClick={() => setShowNouvelleClasse(true)}
-            className="flex items-center gap-2 bg-indigo-600 text-white px-5 py-3 rounded-xl font-medium hover:bg-indigo-700 transition shadow-sm"
+            className="flex items-center gap-2 bg-indigo-600 text-white px-3 sm:px-5 py-3 rounded-xl font-medium hover:bg-indigo-700 transition shadow-sm shrink-0"
           >
             <Plus size={18} />
-            Nouvelle classe
+            <span className="hidden sm:inline">Nouvelle classe</span>
+            <span className="sm:hidden">Nouvelle</span>
           </button>
         </div>
 
@@ -257,7 +259,8 @@ function CarteClasse({ classe, sessionActive }: { classe: Classe; sessionActive:
             className="flex-1 flex items-center justify-center gap-1.5 bg-green-500 text-white py-2 rounded-xl text-sm font-bold hover:bg-green-600 transition"
           >
             <Play size={14} />
-            Reprendre le cours
+            <span className="hidden sm:inline">Reprendre le cours</span>
+            <span className="sm:hidden">Reprendre</span>
           </Link>
         ) : (
           <Link
@@ -265,7 +268,8 @@ function CarteClasse({ classe, sessionActive }: { classe: Classe; sessionActive:
             className="flex-1 flex items-center justify-center gap-1.5 bg-indigo-600 text-white py-2 rounded-xl text-sm font-medium hover:bg-indigo-700 transition"
           >
             <Play size={14} />
-            Lancer un cours
+            <span className="hidden sm:inline">Lancer un cours</span>
+            <span className="sm:hidden">Lancer</span>
           </Link>
         )}
       </div>

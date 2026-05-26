@@ -92,6 +92,33 @@ export default function LandingPage() {
         .stat-num{font-size:36px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(135deg,#7C3AED,#C026D3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .divider-v{width:1px;height:18px;background:#EDE9FE;display:inline-block}
         .feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
+        .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+        .roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
+        .dash-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+        .hero-h1{font-size:64px;font-weight:900;line-height:1.05;letter-spacing:-2px;color:#1E1B4B;margin-bottom:24px}
+        .trust-bar{display:flex;align-items:center;justify-content:center;gap:24px;font-size:14px;color:#9CA3AF}
+        .cta-trust{display:flex;gap:24px;justify-content:center;margin-top:20px;font-size:13px;color:#C4B5FD}
+        .cta-inner{padding:64px 48px}
+        .dash-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+        @media(max-width:767px){
+          .hero-h1{font-size:36px!important;letter-spacing:-1px!important;margin-bottom:16px!important}
+          .feat-grid{grid-template-columns:1fr!important}
+          .roles-grid{grid-template-columns:1fr!important}
+          .dash-grid{grid-template-columns:1fr 1fr!important}
+          .dash-hdr{flex-direction:column!important;align-items:flex-start!important;gap:8px!important}
+          .trust-bar{flex-wrap:wrap!important;gap:8px!important}
+          .divider-v{display:none!important}
+          .cta-trust{flex-wrap:wrap!important;gap:8px!important;justify-content:center!important}
+          .cta-inner{padding:32px 20px!important}
+          .hdr-hide{display:none!important}
+          .hero-cta-btn{width:100%;text-align:center}
+          .stat-num{font-size:28px!important}
+        }
+        @media(min-width:768px) and (max-width:1023px){
+          .hero-h1{font-size:50px!important;letter-spacing:-1.5px!important}
+          .feat-grid{grid-template-columns:repeat(2,1fr)!important}
+          .roles-grid{grid-template-columns:repeat(2,1fr)!important}
+        }
       `}</style>
 
       <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-purple-50">
@@ -105,10 +132,10 @@ export default function LandingPage() {
             <a href="#roles" className="hover:text-purple-700 transition">{t.nav.roles}</a>
             <a href="#stats" className="hover:text-purple-700 transition">{t.nav.statistiques}</a>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 md:gap-3">
             <LangSwitcher lang={lang} setLang={setLang} />
-            <Link href="/connexion" className="btn-secondary text-sm px-4 py-2">{t.nav.seConnecter}</Link>
-            <Link href="/inscription" className="btn-primary text-sm px-5 py-2.5">{t.nav.commencer}</Link>
+            <Link href="/connexion" className="btn-secondary hdr-hide text-sm px-4 py-2">{t.nav.seConnecter}</Link>
+            <Link href="/inscription" className="btn-primary text-sm px-4 py-2 md:px-5 md:py-2.5">{t.nav.commencer}</Link>
           </div>
         </div>
       </header>
@@ -119,15 +146,15 @@ export default function LandingPage() {
         <div style={{position:'absolute',bottom:0,right:'20%',width:400,height:300,background:'radial-gradient(ellipse,rgba(37,99,235,.08) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div className="relative max-w-4xl mx-auto px-6 pt-24 pb-20 text-center">
           <div className="badge fade-up mb-6"><span>✦</span> {land.badge}</div>
-          <h1 className="fade-up-1" style={{fontSize:64,fontWeight:900,lineHeight:1.05,letterSpacing:'-2px',color:'#1E1B4B',marginBottom:24}}>
+          <h1 className="fade-up-1 hero-h1">
             {land.titre1}{' '}<span className="grad-text">{land.titre2}</span>
           </h1>
-          <p className="fade-up-2" style={{fontSize:18,color:'#6B7280',maxWidth:520,margin:'0 auto 36px',lineHeight:1.7}}>{land.sousTitre}</p>
-          <div className="fade-up-3 flex flex-col sm:flex-row gap-3 justify-center items-center mb-14">
-            <Link href="/inscription?role=enseignant" className="btn-primary text-base px-8 py-3.5">{land.cta1} →</Link>
-            <Link href="/inscription" className="btn-secondary text-base px-8 py-3.5">{land.cta2}</Link>
+          <p className="fade-up-2" style={{fontSize:18,color:'#6B7280',maxWidth:520,margin:'0 auto 28px',lineHeight:1.7}}>{land.sousTitre}</p>
+          <div className="fade-up-3 flex flex-col sm:flex-row gap-3 justify-center items-stretch sm:items-center mb-10">
+            <Link href="/inscription?role=enseignant" className="btn-primary hero-cta-btn text-base px-8 py-3.5">{land.cta1} →</Link>
+            <Link href="/inscription" className="btn-secondary hero-cta-btn text-base px-8 py-3.5">{land.cta2}</Link>
           </div>
-          <div className="flex items-center justify-center gap-6 text-sm" style={{color:'#9CA3AF'}}>
+          <div className="trust-bar">
             <span className="flex items-center gap-1.5"><span style={{color:'#10B981',fontSize:8}}>●</span> 500+ utilisateurs actifs</span>
             <span className="divider-v" />
             <span>Aucune carte bancaire</span>
@@ -143,8 +170,9 @@ export default function LandingPage() {
                 <span style={{fontSize:10,color:'#7C3AED'}}>app.ecoledusavoir.fr/dashboard</span>
               </div>
             </div>
-            <div style={{padding:24,display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:14}}>
-              <div style={{gridColumn:'1/-1',display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
+            <div style={{padding:24}}>
+              <div className="dash-grid" style={{gap:14}}>
+              <div className="dash-hdr" style={{gridColumn:'1/-1'}}>
                 <div>
                   <div style={{fontSize:15,fontWeight:700,color:'#1E1B4B'}}>Bonjour, Fatima 👋</div>
                   <div style={{fontSize:12,color:'#9CA3AF',marginTop:2}}>3 sessions planifiées aujourd&apos;hui</div>
@@ -157,6 +185,7 @@ export default function LandingPage() {
                   <div style={{fontSize:11,color:'#9CA3AF',marginTop:4}}>{label}</div>
                 </div>
               ))}
+              </div>
             </div>
           </div>
         </div>
@@ -181,7 +210,7 @@ export default function LandingPage() {
               {land.features.titre}<br /><span className="grad-text-2">{land.features.sousTitre}</span>
             </h2>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:20}}>
+          <div className="feat-grid">
             {[{emoji:'⚡',bg:'#F5F3FF',featured:false},{emoji:'🧠',bg:'#FDF4FF',featured:true},{emoji:'📊',bg:'#EFF6FF',featured:false},{emoji:'📋',bg:'#FFF7ED',featured:false},{emoji:'🔔',bg:'#F0FDF4',featured:false},{emoji:'🌍',bg:'#EFF6FF',featured:false}].map((f,i)=>{
               const item = land.features.items[i]
               return (
@@ -203,7 +232,7 @@ export default function LandingPage() {
             <div className="badge mb-4">Rôles</div>
             <h2 style={{fontSize:40,fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12}}>{land.pourQui.titre}</h2>
           </div>
-          <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:24}}>
+          <div className="roles-grid">
             {[{gradient:'linear-gradient(135deg,#7C3AED,#9333EA)'},{gradient:'linear-gradient(135deg,#C026D3,#DB2777)'},{gradient:'linear-gradient(135deg,#2563EB,#4F46E5)'}].map((style,i)=>{
               const role = land.pourQui.roles[i]
               return (
@@ -214,7 +243,7 @@ export default function LandingPage() {
                   </div>
                   <div style={{padding:24}}>
                     <p style={{fontSize:14,color:'#6B7280',lineHeight:1.65,marginBottom:20}}>{role.desc}</p>
-                    <Link href="/inscription" className="btn-primary" style={{display:'block',padding:'10px 0',fontSize:14}}>Commencer →</Link>
+                    <Link href="/inscription" className="btn-primary" style={{display:'block',padding:'12px 0',fontSize:14,textAlign:'center'}}>Commencer →</Link>
                   </div>
                 </div>
               )
@@ -241,14 +270,14 @@ export default function LandingPage() {
 
       <section style={{padding:'96px 24px',background:'white'}}>
         <div className="max-w-3xl mx-auto text-center">
-          <div style={{background:'linear-gradient(135deg,#FAF5FF 0%,#FDF4FF 50%,#EFF6FF 100%)',border:'1px solid #EDE9FE',borderRadius:24,padding:'64px 48px',position:'relative',overflow:'hidden'}}>
+          <div className="cta-inner" style={{background:'linear-gradient(135deg,#FAF5FF 0%,#FDF4FF 50%,#EFF6FF 100%)',border:'1px solid #EDE9FE',borderRadius:24,position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',inset:0,pointerEvents:'none'}}><NeuralNet opacity={0.18} /></div>
             <div style={{position:'relative'}}>
               <div className="badge mb-6">✦ Prêt ?</div>
               <h2 style={{fontSize:40,fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12,marginBottom:12,lineHeight:1.15}}>{land.cta.titre}</h2>
               <p style={{fontSize:16,color:'#9CA3AF',marginBottom:32,lineHeight:1.6}}>{land.cta.sousTitre}</p>
               <Link href="/inscription" className="btn-primary" style={{fontSize:16,padding:'14px 40px'}}>{land.cta.btn} →</Link>
-              <div style={{display:'flex',gap:24,justifyContent:'center',marginTop:20,fontSize:13,color:'#C4B5FD'}}>
+              <div className="cta-trust">
                 <span>✓ Aucune carte bancaire</span>
                 <span>✓ Gratuit pour démarrer</span>
                 <span>✓ 30 secondes</span>

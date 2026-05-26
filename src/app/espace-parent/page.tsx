@@ -189,15 +189,15 @@ export default function EspaceParentPage() {
     <div className="min-h-screen bg-gray-50">
       {/* Navbar */}
       <nav className="bg-white shadow-sm border-b border-gray-100">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <BookOpen className="text-indigo-600" size={22} />
-            <span className="font-bold text-gray-800 text-sm">L&apos;École du Savoir</span>
-            <span className="text-gray-300 mx-1">·</span>
-            <span className="text-xs font-medium text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full">Espace Parents</span>
+        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2 min-w-0">
+            <BookOpen className="text-indigo-600 shrink-0" size={20} />
+            <span className="font-bold text-gray-800 text-sm hidden sm:inline">L&apos;École du Savoir</span>
+            <span className="text-gray-300 mx-1 hidden sm:inline">·</span>
+            <span className="text-xs font-medium text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-full shrink-0">Parents</span>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-gray-500">Bonjour, <strong>{parent?.prenom}</strong></span>
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+            <span className="text-sm text-gray-500 hidden sm:inline">Bonjour, <strong>{parent?.prenom}</strong></span>
             <button onClick={deconnecter} className="text-gray-400 hover:text-gray-600 transition" title="Déconnexion">
               <LogOut size={18} />
             </button>
@@ -208,15 +208,15 @@ export default function EspaceParentPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
 
         {/* Bandeau enfant */}
-        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 mb-6 text-white">
-          <div className="flex items-center gap-4">
-            <div className="w-14 h-14 bg-white/20 rounded-full flex items-center justify-center text-2xl font-black">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-4 sm:p-6 mb-6 text-white">
+          <div className="flex items-center gap-3 sm:gap-4">
+            <div className="w-12 h-12 sm:w-14 sm:h-14 bg-white/20 rounded-full flex items-center justify-center text-xl sm:text-2xl font-black shrink-0">
               {enfant.prenom[0]}{enfant.nom[0]}
             </div>
-            <div>
+            <div className="min-w-0">
               <p className="text-indigo-200 text-xs font-semibold uppercase tracking-wider">Votre enfant</p>
-              <h1 className="text-2xl font-black">{enfant.prenom} {enfant.nom}</h1>
-              <p className="text-indigo-200 text-sm">{classes.length} classe{classes.length > 1 ? 's' : ''} · {classes.map(c => c.nom).join(', ')}</p>
+              <h1 className="text-xl sm:text-2xl font-black truncate">{enfant.prenom} {enfant.nom}</h1>
+              <p className="text-indigo-200 text-xs sm:text-sm truncate">{classes.length} classe{classes.length > 1 ? 's' : ''} · {classes.map(c => c.nom).join(', ')}</p>
             </div>
           </div>
         </div>
@@ -227,14 +227,14 @@ export default function EspaceParentPage() {
             <button
               key={o.id}
               onClick={() => setOnglet(o.id)}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-lg font-medium text-sm transition whitespace-nowrap flex-1 justify-center ${
+              className={`flex flex-col sm:flex-row items-center gap-1 sm:gap-1.5 px-2 sm:px-4 py-2 rounded-lg font-medium text-xs sm:text-sm transition whitespace-nowrap flex-1 justify-center ${
                 onglet === o.id
                   ? 'bg-indigo-600 text-white shadow-sm'
                   : 'text-gray-500 hover:text-gray-800 hover:bg-gray-50'
               }`}
             >
               {o.icon}
-              {o.label}
+              <span>{o.label}</span>
             </button>
           ))}
         </div>
@@ -243,7 +243,7 @@ export default function EspaceParentPage() {
         {onglet === 'accueil' && (
           <div className="space-y-6">
             {/* Indicateurs clés */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-3 gap-2 sm:gap-4">
               <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5 text-center">
                 <p className="text-3xl font-black text-indigo-600">{moy !== null ? moy.toFixed(1) : '—'}</p>
                 <p className="text-xs text-gray-400 mt-1">Moyenne générale /20</p>
