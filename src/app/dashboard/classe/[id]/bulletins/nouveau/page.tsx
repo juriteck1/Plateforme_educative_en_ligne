@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { ArrowLeft, Save, Eye, Send, Plus, Trash2, Loader2, CheckCircle } from 'lucide-react'
@@ -39,6 +39,14 @@ function ligneVide(ordre: number): LigneMatiere {
 }
 
 export default function NouveauBulletinPage() {
+  return (
+    <Suspense fallback={<EcranChargement />}>
+      <NouveauBulletinForm />
+    </Suspense>
+  )
+}
+
+function NouveauBulletinForm() {
   const { id: classeId } = useParams<{ id: string }>()
   const router = useRouter()
   const searchParams = useSearchParams()

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { BookOpen, Loader2, School } from 'lucide-react'
@@ -11,6 +11,14 @@ import LangSwitcher from '@/components/LangSwitcher'
 type Role = 'enseignant' | 'aesh' | 'eleve' | 'parent'
 
 export default function InscriptionPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex items-center justify-center"><div className="w-8 h-8 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" /></div>}>
+      <InscriptionForm />
+    </Suspense>
+  )
+}
+
+function InscriptionForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { lang, setLang, t, isRTL } = useLanguage()
