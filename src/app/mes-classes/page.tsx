@@ -51,7 +51,7 @@ export default function MesClassesPage() {
       .on(
         'postgres_changes',
         { event: 'UPDATE', schema: 'public', table: 'sessions' },
-        (payload) => {
+        (payload: any) => {
           const session = payload.new as Session
           if (
             session.statut === 'en_cours' &&
@@ -104,7 +104,7 @@ export default function MesClassesPage() {
     setProfile(prof)
 
     const classesAvecSessions = await Promise.all(
-      (inscriptions || []).map(async (insc: { classe: Classe }) => {
+      (inscriptions || []).map(async (insc: { classe: any }) => {
         const [{ data: sessions }, { data: contenus }, { data: toutesSessionsData }, { data: docsData }] = await Promise.all([
           supabase.from('sessions').select('*')
             .eq('classe_id', insc.classe.id)
@@ -174,7 +174,7 @@ export default function MesClassesPage() {
     )
 
     setClasses(classesAvecSessions)
-    classeIdsRef.current = classesAvecSessions.map(c => c.id)
+    classeIdsRef.current = classesAvecSessions.map((c: { id: string }) => c.id)
     setChargement(false)
   }
 

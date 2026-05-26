@@ -70,13 +70,13 @@ export default function SalleElevePage() {
       channel = supabase.channel(`eleve-session-${sessionId}-${Date.now()}`)
       channel
         .on('postgres_changes', { event: '*', schema: 'public', table: 'sessions', filter: `id=eq.${sessionId}` },
-          payload => setSession(payload.new as Session))
+          (payload: any) => setSession(payload.new as Session))
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'exercices', filter: `session_id=eq.${sessionId}` },
           async () => { await chargerExercicesEtReponses(user.id) })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'exercices', filter: `session_id=eq.${sessionId}` },
           async () => { await chargerExercicesEtReponses(user.id) })
         .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'reponses', filter: `eleve_id=eq.${user.id}` },
-          async (payload) => {
+          async (payload: any) => {
             const rep = payload.new as Reponse
             setMesReponses(prev => ({ ...prev, [rep.exercice_id]: rep }))
           })
@@ -111,7 +111,7 @@ export default function SalleElevePage() {
       if (exs && exs.length > 0) {
         const { data: reps, error: repsError } = await supabase
           .from('reponses').select('*').eq('eleve_id', uid)
-          .in('exercice_id', exs.map(e => e.id))
+          .in('exercice_id', exs.map((e: { id: string }) => e.id))
         if (repsError) console.error('Erreur réponses (RLS ?):', repsError)
         const map: Record<string, Reponse> = {}
         for (const r of (reps || [])) map[r.exercice_id] = r

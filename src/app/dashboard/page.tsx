@@ -56,7 +56,7 @@ export default function DashboardPage() {
       const { data: sessions } = await supabase
         .from('sessions')
         .select('*')
-        .in('classe_id', mesClasses.map(c => c.id))
+        .in('classe_id', mesClasses.map((c: { id: string }) => c.id))
         .in('statut', ['en_cours', 'pause'])
         .order('started_at', { ascending: false })
 

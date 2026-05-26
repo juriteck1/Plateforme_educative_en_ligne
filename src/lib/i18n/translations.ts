@@ -1,6 +1,6 @@
 export type Lang = 'fr' | 'ar' | 'en' | 'tr'
 
-export const translations = {
+export const translations: Record<Lang, any> = {
   fr: {
     // Navbar publique
     nav: {

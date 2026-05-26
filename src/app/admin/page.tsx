@@ -75,6 +75,7 @@ export default function AdminPage() {
     }
     setProfile(prof)
 
+    // Charger l'établissement de l'admin
     if (prof.etablissement_id) {
       const { data: etab } = await supabase
         .from('etablissements')
@@ -86,18 +87,21 @@ export default function AdminPage() {
 
     const etabId = prof.etablissement_id
 
+    // Si pas d'établissement lié, afficher dashboard vide
     if (!etabId) {
       setStats({ nbEnseignants: 0, nbEleves: 0, nbParents: 0, nbClasses: 0, nbSessionsTotal: 0, nbSessionsActives: 0, nbBulletinsPublies: 0 })
       setChargement(false)
       return
     }
 
+    // Récupérer les IDs des classes de cet établissement
     const { data: classesEtab } = await supabase
       .from('classes')
       .select('id')
       .eq('etablissement_id', etabId)
     const classeIds = (classesEtab || []).map((c: { id: string }) => c.id)
 
+    // Stats scopées par établissement
     const [
       { count: nbEnseignants },
       { count: nbEleves },
@@ -139,6 +143,7 @@ export default function AdminPage() {
       nbBulletinsPublies,
     })
 
+    // Enseignants de l'établissement avec leurs classes
     const { data: profsData } = await supabase
       .from('profiles')
       .select('*')
@@ -163,6 +168,7 @@ export default function AdminPage() {
     )
     setEnseignants(enseignantsAvecClasses)
 
+    // Sessions récentes de l'établissement
     if (classeIds.length > 0) {
       const { data: sessionsData } = await supabase
         .from('sessions')
@@ -173,6 +179,7 @@ export default function AdminPage() {
       setSessionsRecentes(sessionsData || [])
     }
 
+    // Statistiques avancées par classe
     if (classeIds.length > 0) {
       const { data: classesDetail } = await supabase
         .from('classes')
@@ -181,9 +188,11 @@ export default function AdminPage() {
 
       const statsParClasse = await Promise.all(
         (classesDetail || []).map(async (c: { id: string; nom: string }) => {
+          // Élèves inscrits
           const { count: nbEleves } = await supabase
             .from('inscriptions').select('*', { count: 'exact', head: true }).eq('classe_id', c.id)
 
+          // Sessions de cette classe
           const { data: sessions } = await supabase
             .from('sessions').select('id').eq('classe_id', c.id)
           const sessionIds = (sessions || []).map((s: { id: string }) => s.id)
@@ -208,6 +217,7 @@ export default function AdminPage() {
           const totalPresences = nbPresences + nbAbsences + nbRetards
           const tauxPresence = totalPresences > 0 ? Math.round((nbPresences / totalPresences) * 100) : 0
 
+          // Moyenne des bulletins publiés pour cette classe
           const { data: bulletinsData } = await supabase
             .from('bulletins')
             .select('id')
@@ -267,6 +277,7 @@ export default function AdminPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Navbar */}
       <nav className="bg-white shadow-sm border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-6 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -288,6 +299,7 @@ export default function AdminPage() {
 
       <main className="max-w-7xl mx-auto px-6 py-8">
 
+        {/* En-tête établissement */}
         <div className="mb-8">
           <h1 className="text-2xl font-black text-gray-900">Tableau de bord</h1>
           {etablissement ? (
@@ -312,6 +324,7 @@ export default function AdminPage() {
           )}
         </div>
 
+        {/* Stats globales */}
         {stats && (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
             {[
@@ -335,6 +348,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Onglets */}
         <div className="flex gap-1 bg-gray-100 rounded-xl p-1 mb-6 w-fit">
           {([
             { id: 'apercu', label: 'Aperçu' },
@@ -354,8 +368,10 @@ export default function AdminPage() {
           ))}
         </div>
 
+        {/* Aperçu */}
         {onglet === 'apercu' && (
           <div className="grid md:grid-cols-2 gap-6">
+            {/* Top enseignants */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                 <h2 className="font-bold text-gray-900">Enseignants</h2>
@@ -386,6 +402,7 @@ export default function AdminPage() {
               </div>
             </div>
 
+            {/* Sessions récentes */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-50 flex items-center justify-between">
                 <h2 className="font-bold text-gray-900">Sessions récentes</h2>
@@ -411,6 +428,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Enseignants détail */}
         {onglet === 'enseignants' && (
           <div className="space-y-4">
             {enseignants.map(e => (
@@ -445,6 +463,7 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Sessions détail */}
         {onglet === 'sessions' && (
           <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
             <table className="w-full">
@@ -475,8 +494,11 @@ export default function AdminPage() {
           </div>
         )}
 
+        {/* Statistiques avancées */}
         {onglet === 'statistiques' && (
           <div className="space-y-6">
+
+            {/* Résumé global présence */}
             {statsClasses.length > 0 && (() => {
               const totalPres = statsClasses.reduce((s, c) => s + c.nb_presences, 0)
               const totalAbs  = statsClasses.reduce((s, c) => s + c.nb_absences, 0)
@@ -514,6 +536,7 @@ export default function AdminPage() {
                       <p className="text-xs text-gray-400 mt-1">Retards</p>
                     </div>
                   </div>
+                  {/* Barre de répartition */}
                   {total > 0 && (
                     <div className="h-4 rounded-full overflow-hidden flex">
                       <div className="bg-green-500 transition-all" style={{ width: `${(totalPres/total)*100}%` }} />
@@ -530,6 +553,7 @@ export default function AdminPage() {
               )
             })()}
 
+            {/* Tableau par classe */}
             <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div className="px-6 py-4 border-b border-gray-50">
                 <h2 className="font-bold text-gray-900">Détail par classe</h2>
@@ -548,12 +572,14 @@ export default function AdminPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-3">
+                          {/* Taux de présence */}
                           <div className="text-center">
                             <p className={`text-xl font-black ${c.taux_presence >= 80 ? 'text-green-600' : c.taux_presence >= 60 ? 'text-orange-500' : 'text-red-500'}`}>
                               {c.nb_presences + c.nb_absences + c.nb_retards > 0 ? `${c.taux_presence}%` : '—'}
                             </p>
                             <p className="text-xs text-gray-400">présence</p>
                           </div>
+                          {/* Moyenne bulletins */}
                           <div className="text-center">
                             <p className={`text-xl font-black ${
                               c.moyenne_bulletins === null ? 'text-gray-300'
@@ -567,6 +593,7 @@ export default function AdminPage() {
                           </div>
                         </div>
                       </div>
+                      {/* Mini barre présence */}
                       {(c.nb_presences + c.nb_absences + c.nb_retards) > 0 && (
                         <div className="h-2 rounded-full overflow-hidden flex bg-gray-100">
                           <div className="bg-green-500" style={{ width: `${(c.nb_presences/(c.nb_presences+c.nb_absences+c.nb_retards))*100}%` }} />
@@ -585,6 +612,7 @@ export default function AdminPage() {
               )}
             </div>
 
+            {/* Taux de présence — classement des classes */}
             {statsClasses.filter(c => c.nb_presences + c.nb_absences + c.nb_retards > 0).length > 1 && (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
                 <h2 className="font-bold text-gray-900 mb-4">Classement des classes par présence</h2>
@@ -637,5 +665,4 @@ function StatutBadge({ statut }: { statut: string }) {
       {labels[statut] || statut}
     </span>
   )
-  
 }

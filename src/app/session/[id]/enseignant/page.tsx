@@ -76,7 +76,7 @@ export default function SalleEnseignantPage() {
 
     // Charger toutes les réponses
     if (exs.length > 0) {
-      await chargerToutesReponses(exs.map(e => e.id))
+      await chargerToutesReponses(exs.map((e: { id: string }) => e.id))
     }
   }
 
@@ -922,7 +922,7 @@ function PanneauPresences({
       const supabase = createClient()
       const { data: inscs } = await supabase
         .from('inscriptions').select('eleve:profiles(*)').eq('classe_id', classeId)
-      setEleves((inscs || []).map((i: { eleve: Profile }) => i.eleve))
+      setEleves((inscs || []).map((i: { eleve: any }) => i.eleve))
 
       // Statuts d'appel déjà enregistrés
       const { data: pres } = await supabase

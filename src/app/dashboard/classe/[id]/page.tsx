@@ -36,7 +36,7 @@ export default function GererClassePage() {
 
     setClasse(classeData)
     setSessions(sessionsData || [])
-    setEleves((elevesData || []).map((i: { eleve: Profile }) => i.eleve))
+    setEleves((elevesData || []).map((i: { eleve: any }) => i.eleve))
     setContenus(contenusData || [])
     setDocuments(documentsData || [])
     setChargement(false)
