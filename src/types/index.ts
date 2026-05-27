@@ -122,7 +122,7 @@ export interface MessageSession {
   session_id: string
   auteur_id: string
   contenu: string
-  type: 'message' | 'main_levee'
+  type: 'message' | 'main_levee' | 'annonce'
   created_at: string
   auteur?: Profile
 }

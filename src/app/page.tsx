@@ -71,7 +71,7 @@ export default function LandingPage() {
   const land = t.landing
 
   return (
-    <div className="min-h-screen bg-white text-gray-900" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden" dir={isRTL ? 'rtl' : 'ltr'}>
       <style>{`
         @keyframes fade-up { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
         @keyframes pulse-node { 0%,100%{opacity:.18} 50%{opacity:.28} }
@@ -92,6 +92,7 @@ export default function LandingPage() {
         .stat-num{font-size:36px;font-weight:900;letter-spacing:-1px;line-height:1;background:linear-gradient(135deg,#7C3AED,#C026D3);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
         .divider-v{width:1px;height:18px;background:#EDE9FE;display:inline-block}
         .feature-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;margin-bottom:14px}
+        .section-h2{font-size:36px}
         .feat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
         .roles-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:24px}
         .dash-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
@@ -101,7 +102,8 @@ export default function LandingPage() {
         .cta-inner{padding:64px 48px}
         .dash-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
         @media(max-width:767px){
-          .hero-h1{font-size:36px!important;letter-spacing:-1px!important;margin-bottom:16px!important}
+          .hero-h1{font-size:32px!important;letter-spacing:-1px!important;margin-bottom:16px!important}
+          .section-h2{font-size:26px!important;letter-spacing:-0.5px!important}
           .feat-grid{grid-template-columns:1fr!important}
           .roles-grid{grid-template-columns:1fr!important}
           .dash-grid{grid-template-columns:1fr 1fr!important}
@@ -121,21 +123,21 @@ export default function LandingPage() {
         }
       `}</style>
 
-      <header className="sticky top-0 z-50 bg-white/90 backdrop-blur border-b border-purple-50">
-        <div className="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
-            <div style={{width:32,height:32,borderRadius:8,background:'linear-gradient(135deg,#7C3AED,#C026D3)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:800,fontSize:14}}>É</div>
-            <span style={{fontWeight:700,fontSize:15,color:'#1E1B4B'}}>École du Savoir</span>
+      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-purple-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-3">
+          {/* Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div style={{width:30,height:30,borderRadius:8,background:'linear-gradient(135deg,#7C3AED,#C026D3)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:800,fontSize:13}}>É</div>
+            <span style={{fontWeight:700,fontSize:14,color:'#1E1B4B'}} className="hidden xs:inline sm:inline">École du Savoir</span>
           </div>
-          <nav className="hidden md:flex items-center gap-8 text-sm" style={{color:'#6B7280'}}>
-            <a href="#features" className="hover:text-purple-700 transition">{t.nav.fonctionnalites}</a>
-            <a href="#roles" className="hover:text-purple-700 transition">{t.nav.roles}</a>
-            <a href="#stats" className="hover:text-purple-700 transition">{t.nav.statistiques}</a>
-          </nav>
-          <div className="flex items-center gap-2 md:gap-3">
+          {/* Actions */}
+          <div className="flex items-center gap-2">
             <LangSwitcher lang={lang} setLang={setLang} />
-            <Link href="/connexion" className="btn-secondary hdr-hide text-sm px-4 py-2">{t.nav.seConnecter}</Link>
-            <Link href="/inscription" className="btn-primary text-sm px-4 py-2 md:px-5 md:py-2.5">{t.nav.commencer}</Link>
+            <Link href="/connexion" className="btn-secondary text-sm px-3 py-2 hidden sm:inline-block">{t.nav.seConnecter}</Link>
+            <Link href="/inscription" className="btn-primary text-xs sm:text-sm px-3 sm:px-5 py-2 sm:py-2.5 whitespace-nowrap">
+              <span className="hidden sm:inline">{t.nav.commencer}</span>
+              <span className="sm:hidden">Commencer</span>
+            </Link>
           </div>
         </div>
       </header>
@@ -144,7 +146,7 @@ export default function LandingPage() {
         <div className="neural-anim" style={{position:'absolute',inset:0,pointerEvents:'none'}}><NeuralNet opacity={0.52} /></div>
         <div style={{position:'absolute',top:'-10%',left:'30%',width:600,height:400,background:'radial-gradient(ellipse,rgba(192,38,211,.12) 0%,transparent 70%)',pointerEvents:'none'}} />
         <div style={{position:'absolute',bottom:0,right:'20%',width:400,height:300,background:'radial-gradient(ellipse,rgba(37,99,235,.08) 0%,transparent 70%)',pointerEvents:'none'}} />
-        <div className="relative max-w-4xl mx-auto px-6 pt-24 pb-20 text-center">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-12 sm:pt-20 pb-10 sm:pb-16 text-center">
           <div className="badge fade-up mb-6"><span>✦</span> {land.badge}</div>
           <h1 className="fade-up-1 hero-h1">
             {land.titre1}{' '}<span className="grad-text">{land.titre2}</span>
@@ -162,7 +164,7 @@ export default function LandingPage() {
             <span>Prêt en 30 secondes</span>
           </div>
         </div>
-        <div className="relative max-w-4xl mx-auto px-6 pb-0">
+        <div className="relative max-w-4xl mx-auto px-4 sm:px-6 pb-0 hidden sm:block">
           <div style={{background:'white',borderRadius:20,border:'1px solid #EDE9FE',boxShadow:'0 24px 80px rgba(124,58,237,.15),0 4px 20px rgba(0,0,0,.05)',overflow:'hidden'}}>
             <div style={{background:'#F9F5FF',borderBottom:'1px solid #F0EBF8',padding:'12px 16px',display:'flex',alignItems:'center',gap:8}}>
               <div style={{display:'flex',gap:6}}>{['#FCA5A5','#FCD34D','#6EE7B7'].map(c=><div key={c} style={{width:10,height:10,borderRadius:'50%',background:c}} />)}</div>
@@ -191,8 +193,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="stats" style={{borderTop:'1px solid #F5F3FF',borderBottom:'1px solid #F5F3FF',padding:'48px 24px',background:'white'}}>
-        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+      <section id="stats" style={{borderTop:'1px solid #F5F3FF',borderBottom:'1px solid #F5F3FF',background:'white'}} className="py-10 sm:py-12 px-4 sm:px-6">
+        <div className="max-w-5xl mx-auto grid grid-cols-2 md:grid-cols-4 gap-6 sm:gap-8 text-center">
           {[{val:'500+',label:'Élèves actifs'},{val:'50+',label:'Enseignants'},{val:'98%',label:'Satisfaction'},{val:'4–16',label:'Ans couverts'}].map(({val,label})=>(
             <div key={label}>
               <div className="stat-num">{val}</div>
@@ -202,11 +204,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="features" style={{padding:'96px 24px',background:'#FAF5FF'}}>
+      <section id="features" style={{background:'#FAF5FF'}} className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <div style={{textAlign:'center',marginBottom:64}}>
+          <div style={{textAlign:'center',marginBottom:48}}>
             <div className="badge mb-4">Fonctionnalités</div>
-            <h2 style={{fontSize:40,fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12,marginBottom:12,lineHeight:1.15}}>
+            <h2 className="section-h2" style={{fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12,marginBottom:12,lineHeight:1.15}}>
               {land.features.titre}<br /><span className="grad-text-2">{land.features.sousTitre}</span>
             </h2>
           </div>
@@ -226,11 +228,11 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section id="roles" style={{padding:'96px 24px',background:'white'}}>
+      <section id="roles" style={{background:'white'}} className="py-16 sm:py-24 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto">
-          <div style={{textAlign:'center',marginBottom:64}}>
+          <div style={{textAlign:'center',marginBottom:48}}>
             <div className="badge mb-4">Rôles</div>
-            <h2 style={{fontSize:40,fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12}}>{land.pourQui.titre}</h2>
+            <h2 className="section-h2" style={{fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12}}>{land.pourQui.titre}</h2>
           </div>
           <div className="roles-grid">
             {[{gradient:'linear-gradient(135deg,#7C3AED,#9333EA)'},{gradient:'linear-gradient(135deg,#C026D3,#DB2777)'},{gradient:'linear-gradient(135deg,#2563EB,#4F46E5)'}].map((style,i)=>{
@@ -252,7 +254,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{background:'#FAF5FF',padding:'80px 24px',borderTop:'1px solid #F5F3FF'}}>
+      <section style={{background:'#FAF5FF',borderTop:'1px solid #F5F3FF'}} className="py-12 sm:py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <div style={{fontSize:48,marginBottom:20}}>💬</div>
           <blockquote style={{fontSize:22,fontWeight:700,color:'#1E1B4B',lineHeight:1.55,marginBottom:20}}>
@@ -268,13 +270,13 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <section style={{padding:'96px 24px',background:'white'}}>
+      <section style={{background:'white'}} className="py-12 sm:py-20 px-4 sm:px-6">
         <div className="max-w-3xl mx-auto text-center">
           <div className="cta-inner" style={{background:'linear-gradient(135deg,#FAF5FF 0%,#FDF4FF 50%,#EFF6FF 100%)',border:'1px solid #EDE9FE',borderRadius:24,position:'relative',overflow:'hidden'}}>
             <div style={{position:'absolute',inset:0,pointerEvents:'none'}}><NeuralNet opacity={0.18} /></div>
             <div style={{position:'relative'}}>
               <div className="badge mb-6">✦ Prêt ?</div>
-              <h2 style={{fontSize:40,fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12,marginBottom:12,lineHeight:1.15}}>{land.cta.titre}</h2>
+              <h2 className="section-h2" style={{fontWeight:900,color:'#1E1B4B',letterSpacing:-1,marginTop:12,marginBottom:12,lineHeight:1.15}}>{land.cta.titre}</h2>
               <p style={{fontSize:16,color:'#9CA3AF',marginBottom:32,lineHeight:1.6}}>{land.cta.sousTitre}</p>
               <Link href="/inscription" className="btn-primary" style={{fontSize:16,padding:'14px 40px'}}>{land.cta.btn} →</Link>
               <div className="cta-trust">
@@ -287,7 +289,7 @@ export default function LandingPage() {
         </div>
       </section>
 
-      <footer style={{borderTop:'1px solid #F5F3FF',padding:'32px 24px'}}>
+      <footer style={{borderTop:'1px solid #F5F3FF'}} className="py-8 px-4 sm:px-6">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           <div style={{display:'flex',alignItems:'center',gap:8}}>
             <div style={{width:28,height:28,borderRadius:7,background:'linear-gradient(135deg,#7C3AED,#C026D3)',display:'flex',alignItems:'center',justifyContent:'center',color:'white',fontWeight:800,fontSize:12}}>É</div>

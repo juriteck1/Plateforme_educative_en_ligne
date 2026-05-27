@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Send, Video, ExternalLink, CheckCircle2, BookOpen, ClipboardList, Calendar, FileText, ImageIcon, File, Music, Link2, MessageCircle, X, Hand } from 'lucide-react'
+import { Send, Video, ExternalLink, CheckCircle2, BookOpen, ClipboardList, Calendar, FileText, ImageIcon, File, Music, Link2, MessageCircle, X, Hand, LogOut, Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session, Exercice, Reponse, ContenuClasse, DocumentClasse, ContenuSession, MessageSession, Profile } from '@/types'
 
@@ -21,6 +21,9 @@ export default function SalleElevePage() {
   const [chatOuvert, setChatOuvert] = useState(false)
   const [nbNouveaux, setNbNouveaux] = useState(0)
   const [chargement, setChargement] = useState(true)
+  const [confirmerQuitter, setConfirmerQuitter] = useState(false)
+  const [mainLevee, setMainLevee] = useState(false)
+  const [annonce, setAnnonce] = useState<string | null>(null)
 
   useEffect(() => {
     let channel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null
@@ -61,9 +64,26 @@ export default function SalleElevePage() {
         .order('created_at', { ascending: true })
       setMessages((msgsData || []) as (MessageSession & { auteur: Profile })[])
 
+      // Enregistrer la présence
       await supabase.from('presences').upsert({
         session_id: sessionId, eleve_id: user.id, rejoint_a: new Date().toISOString(),
-      })
+      }, { onConflict: 'session_id,eleve_id' })
+
+      // Auto-inscrire l'élève à la classe si pas encore inscrit
+      if (sessionData?.classe_id) {
+        const { data: dejaInscrit } = await supabase
+          .from('inscriptions')
+          .select('id')
+          .eq('classe_id', sessionData.classe_id)
+          .eq('eleve_id', user.id)
+          .single()
+        if (!dejaInscrit) {
+          await supabase.from('inscriptions').insert({
+            classe_id: sessionData.classe_id,
+            eleve_id: user.id,
+          })
+        }
+      }
 
       await chargerExercicesEtReponses(user.id)
 
@@ -81,7 +101,7 @@ export default function SalleElevePage() {
             setMesReponses(prev => ({ ...prev, [rep.exercice_id]: rep }))
           })
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'messages_session', filter: `session_id=eq.${sessionId}` },
-          async () => {
+          async (payload: any) => {
             const supabase2 = createClient()
             const { data } = await supabase2
               .from('messages_session')
@@ -90,10 +110,16 @@ export default function SalleElevePage() {
               .order('created_at', { ascending: true })
             const msgs = (data || []) as (MessageSession & { auteur: Profile })[]
             setMessages(msgs)
-            setChatOuvert(prev => {
-              if (!prev) setNbNouveaux(n => n + 1)
-              return prev
-            })
+            // Afficher une bannière si c'est une annonce du prof
+            if (payload.new?.type === 'annonce') {
+              setAnnonce(payload.new.contenu)
+              setTimeout(() => setAnnonce(null), 8000)
+            } else {
+              setChatOuvert(prev => {
+                if (!prev) setNbNouveaux(n => n + 1)
+                return prev
+              })
+            }
           })
         .subscribe()
 
@@ -122,6 +148,24 @@ export default function SalleElevePage() {
     initialiser()
     return () => { if (channel) createClient().removeChannel(channel) }
   }, [sessionId])
+
+  async function leverMain() {
+    if (mainLevee || !userId) return
+    const supabase = createClient()
+    await supabase.from('messages_session').insert({
+      session_id: sessionId, auteur_id: userId, contenu: '🖐 Main levée', type: 'main_levee',
+    })
+    setMainLevee(true)
+  }
+
+  async function quitterCours() {
+    if (!userId) return
+    const supabase = createClient()
+    await supabase.from('presences')
+      .update({ quitte_a: new Date().toISOString() })
+      .eq('session_id', sessionId).eq('eleve_id', userId)
+    router.push('/mes-classes')
+  }
 
   async function envoyerReponse(exerciceId: string, contenu: string) {
     if (!userId || !contenu.trim()) return
@@ -185,9 +229,50 @@ export default function SalleElevePage() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-indigo-50 via-white to-purple-50 flex flex-col">
 
+      {/* ── Bannière annonce prof ───────────────────────────────── */}
+      {annonce && (
+        <div className="fixed top-0 inset-x-0 z-50 flex items-start justify-center pt-4 px-4 pointer-events-none">
+          <div className="bg-indigo-600 text-white px-5 py-4 rounded-2xl shadow-2xl max-w-md w-full flex items-start gap-3 pointer-events-auto animate-bounce-once">
+            <Megaphone size={22} className="shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-black text-sm mb-0.5">Message du professeur</p>
+              <p className="text-indigo-100 text-sm">{annonce}</p>
+            </div>
+            <button onClick={() => setAnnonce(null)} className="text-indigo-200 hover:text-white shrink-0">
+              <X size={18} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Modale quitter ──────────────────────────────────────── */}
+      {confirmerQuitter && (
+        <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center px-4">
+          <div className="bg-white rounded-3xl p-6 max-w-sm w-full shadow-2xl text-center">
+            <div className="text-5xl mb-4">🚪</div>
+            <h2 className="text-xl font-black text-gray-900 mb-2">Quitter le cours ?</h2>
+            <p className="text-gray-400 text-sm mb-6">Tu seras déconnecté du cours en cours. Tu pourras le rejoindre à nouveau avec le code.</p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setConfirmerQuitter(false)}
+                className="flex-1 border-2 border-gray-200 text-gray-600 py-3 rounded-2xl font-bold hover:bg-gray-50 transition"
+              >
+                Rester 📚
+              </button>
+              <button
+                onClick={quitterCours}
+                className="flex-1 bg-red-500 text-white py-3 rounded-2xl font-bold hover:bg-red-600 transition"
+              >
+                Quitter 🚪
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Header ─────────────────────────────────────────────── */}
       <header className="bg-white border-b-2 border-indigo-100 px-4 py-3 sticky top-0 z-20 shadow-sm">
-        <div className="max-w-6xl mx-auto flex items-center justify-between gap-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-9 h-9 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0">
               <span className="text-lg">📚</span>
@@ -201,7 +286,7 @@ export default function SalleElevePage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-3 shrink-0">
+          <div className="flex items-center gap-2 shrink-0">
             {/* Progression */}
             {exercices.length > 0 && (
               <div className="hidden sm:flex items-center gap-2">
@@ -223,13 +308,22 @@ export default function SalleElevePage() {
             {/* Bouton vidéo */}
             {session.daily_room_url && (
               <a href={session.daily_room_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-indigo-600 text-white px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition shadow-md shadow-indigo-100">
+                className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition shadow-md shadow-indigo-100">
                 <Video size={15} />
-                <span className="hidden sm:inline">Rejoindre la vidéo</span>
-                <span className="sm:hidden">Vidéo</span>
+                <span className="hidden sm:inline">Vidéo</span>
                 <ExternalLink size={12} className="opacity-70" />
               </a>
             )}
+
+            {/* Bouton quitter */}
+            <button
+              onClick={() => setConfirmerQuitter(true)}
+              className="flex items-center gap-1.5 bg-red-50 text-red-500 border-2 border-red-200 px-3 py-2 rounded-xl font-bold text-sm hover:bg-red-100 transition"
+              title="Quitter le cours"
+            >
+              <LogOut size={15} />
+              <span className="hidden sm:inline">Quitter</span>
+            </button>
           </div>
         </div>
       </header>
@@ -542,7 +636,7 @@ export default function SalleElevePage() {
         {/* ── Colonne droite : exercices ────────────────────────── */}
         <div className="flex-1 min-w-0 space-y-6">
           {exercices.length === 0 ? (
-            <EcouteProfesseur />
+            <EcouteProfesseur onLeverMain={leverMain} mainLevee={mainLevee} />
           ) : (
             exercices.map((exercice, idx) => (
               <CarteExercice
@@ -557,8 +651,25 @@ export default function SalleElevePage() {
         </div>
       </div>
 
-      {/* ── Chat flottant ──────────────────────────────────────── */}
-      {/* Bouton flottant */}
+      {/* ── Boutons flottants ─────────────────────────────────── */}
+      {/* Bouton lever la main */}
+      {!chatOuvert && (
+        <button
+          onClick={leverMain}
+          disabled={mainLevee}
+          className={`fixed bottom-6 right-24 z-30 w-14 h-14 rounded-full shadow-xl flex flex-col items-center justify-center transition-transform hover:scale-105 gap-0.5 ${
+            mainLevee
+              ? 'bg-orange-200 cursor-not-allowed'
+              : 'bg-orange-400 hover:bg-orange-500'
+          }`}
+          title={mainLevee ? 'Main levée !' : 'Lever la main'}
+        >
+          <Hand size={20} className="text-white" />
+          {mainLevee && <span className="text-white text-xs font-black leading-none">✓</span>}
+        </button>
+      )}
+
+      {/* Bouton chat flottant */}
       <button
         onClick={() => { setChatOuvert(true); setNbNouveaux(0) }}
         className={`fixed bottom-6 right-6 z-30 w-14 h-14 rounded-full shadow-xl flex items-center justify-center transition-transform hover:scale-105 ${
@@ -604,19 +715,38 @@ export default function SalleElevePage() {
 
 // ─── État d'attente ──────────────────────────────────────────────────────────
 
-function EcouteProfesseur() {
+function EcouteProfesseur({ onLeverMain, mainLevee }: { onLeverMain: () => void; mainLevee: boolean }) {
   return (
-    <div className="flex flex-col items-center justify-center py-20 text-center">
+    <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="w-28 h-28 bg-indigo-100 rounded-full flex items-center justify-center mb-6 shadow-inner">
         <span className="text-5xl">👂</span>
       </div>
       <h2 className="text-2xl font-black text-gray-800 mb-2">Écoute ton professeur !</h2>
       <p className="text-gray-400 text-base">Les exercices apparaîtront ici dès que le prof en envoie un.</p>
-      <div className="mt-8 flex justify-center gap-2">
+      <div className="mt-6 flex justify-center gap-2">
         {[0,1,2].map(i => (
           <div key={i} className="w-2.5 h-2.5 bg-indigo-300 rounded-full animate-bounce"
             style={{ animationDelay: `${i * 0.2}s` }} />
         ))}
+      </div>
+
+      {/* Bouton lever la main proéminent */}
+      <div className="mt-10">
+        <button
+          onClick={onLeverMain}
+          disabled={mainLevee}
+          className={`flex items-center gap-3 px-8 py-4 rounded-2xl font-black text-lg transition shadow-lg ${
+            mainLevee
+              ? 'bg-orange-100 text-orange-400 shadow-none cursor-default'
+              : 'bg-orange-400 hover:bg-orange-500 text-white shadow-orange-200 active:scale-95'
+          }`}
+        >
+          <Hand size={24} />
+          {mainLevee ? '✅ Main levée !' : '🖐 Lever la main'}
+        </button>
+        {!mainLevee && (
+          <p className="text-gray-400 text-sm mt-3">Appuie pour signaler au professeur</p>
+        )}
       </div>
     </div>
   )

@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from 'react'
 import React from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Pause, Play, Square, Send, Users, BookOpen, Video, ExternalLink, Library, ChevronDown, ChevronUp, ArrowLeft, FileText, ImageIcon, File, Upload, Trash2, Music, Plus, Link2, MessageCircle, Hand } from 'lucide-react'
+import { Pause, Play, Square, Send, Users, BookOpen, Video, ExternalLink, Library, ChevronDown, ChevronUp, ArrowLeft, FileText, ImageIcon, File, Upload, Trash2, Music, Plus, Link2, MessageCircle, Hand, Megaphone } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session, Exercice, Reponse, Profile, Presence, ExerciceModele, DocumentClasse, ContenuSession, SectionActive, MessageSession } from '@/types'
 
@@ -1464,13 +1464,14 @@ function PanneauChat({
   const [texte, setTexte] = useState('')
   const [envoi, setEnvoi] = useState(false)
   const [mainLevee, setMainLevee] = useState(false)
+  const [modeAnnonce, setModeAnnonce] = useState(false)
   const endRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages.length])
 
-  async function envoyerMessage(type: 'message' | 'main_levee' = 'message') {
+  async function envoyerMessage(type: 'message' | 'main_levee' | 'annonce' = 'message') {
     const contenu = type === 'main_levee' ? '🖐 Main levée' : texte.trim()
     if (!contenu) return
     setEnvoi(true)
@@ -1483,8 +1484,9 @@ function PanneauChat({
       contenu,
       type,
     })
-    if (type === 'message') setTexte('')
+    setTexte('')
     if (type === 'main_levee') setMainLevee(true)
+    if (type === 'annonce') setModeAnnonce(false)
     setEnvoi(false)
   }
 
@@ -1550,6 +1552,21 @@ function PanneauChat({
 
       {/* Zone de saisie */}
       <div className="border-t border-gray-700 p-3 space-y-2">
+        {/* Bouton annonce (enseignant seulement) */}
+        {isEnseignant && (
+          <button
+            onClick={() => setModeAnnonce(m => !m)}
+            className={`w-full flex items-center justify-center gap-2 py-2 rounded-xl text-sm font-semibold transition ${
+              modeAnnonce
+                ? 'bg-indigo-600 text-white'
+                : 'bg-indigo-500/20 hover:bg-indigo-500/30 text-indigo-300 border border-indigo-700/30'
+            }`}
+          >
+            <Megaphone size={15} />
+            {modeAnnonce ? '📢 Mode annonce activé — Envoyer ci-dessous' : '📢 Envoyer une annonce à tous'}
+          </button>
+        )}
+
         {/* Bouton main levée (élèves seulement) */}
         {!isEnseignant && (
           <button
@@ -1571,18 +1588,32 @@ function PanneauChat({
             type="text"
             value={texte}
             onChange={e => setTexte(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyerMessage() } }}
-            placeholder={isEnseignant ? 'Message à tous les élèves...' : 'Ton message...'}
-            className="flex-1 bg-gray-700 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 focus:ring-indigo-400 placeholder-gray-500"
+            onKeyDown={e => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault()
+                envoyerMessage(modeAnnonce ? 'annonce' : 'message')
+              }
+            }}
+            placeholder={modeAnnonce ? '📢 Annonce affichée sur les écrans élèves...' : isEnseignant ? 'Message à tous les élèves...' : 'Ton message...'}
+            className={`flex-1 text-white text-sm rounded-xl px-3 py-2.5 focus:outline-none focus:ring-2 placeholder-gray-500 ${
+              modeAnnonce
+                ? 'bg-indigo-900/60 focus:ring-indigo-400 border border-indigo-500'
+                : 'bg-gray-700 focus:ring-indigo-400'
+            }`}
           />
           <button
-            onClick={() => envoyerMessage()}
+            onClick={() => envoyerMessage(modeAnnonce ? 'annonce' : 'message')}
             disabled={envoi || !texte.trim()}
-            className="bg-indigo-600 hover:bg-indigo-500 text-white px-3 py-2.5 rounded-xl transition disabled:opacity-40"
+            className={`text-white px-3 py-2.5 rounded-xl transition disabled:opacity-40 ${
+              modeAnnonce ? 'bg-indigo-600 hover:bg-indigo-500' : 'bg-indigo-600 hover:bg-indigo-500'
+            }`}
           >
-            <Send size={15} />
+            {modeAnnonce ? <Megaphone size={15} /> : <Send size={15} />}
           </button>
         </div>
+        {modeAnnonce && (
+          <p className="text-indigo-400 text-xs text-center">L&apos;annonce s&apos;affichera en bannière sur l&apos;écran de chaque élève pendant 8 secondes.</p>
+        )}
       </div>
     </div>
   )
