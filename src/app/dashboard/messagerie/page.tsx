@@ -158,7 +158,7 @@ export default function MessageriePage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('messages_internes')
-      .select('*, expediteur:profiles!messages_internes_expediteur_id_fkey(*)')
+      .select('*')
       .eq('classe_id', classeId)
       .or(`and(expediteur_id.eq.${moiId},destinataire_id.eq.${parentId}),and(expediteur_id.eq.${parentId},destinataire_id.eq.${moiId})`)
       .order('created_at', { ascending: true })
