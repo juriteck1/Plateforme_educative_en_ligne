@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   BookOpen, LogOut, GraduationCap, Calendar, ClipboardList,
   FileText, Star, Clock, CheckCircle, AlertCircle, TrendingUp,
-  Eye, ChevronRight, User
+  Eye, ChevronRight, User, MessageCircle
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, Bulletin, BulletinMatiere, Classe, Session } from '@/types'
@@ -198,6 +198,12 @@ export default function EspaceParentPage() {
           </div>
           <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             <span className="text-sm text-gray-500 hidden sm:inline">Bonjour, <strong>{parent?.prenom}</strong></span>
+            <Link href="/espace-parent/messagerie"
+              className="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 transition text-sm font-medium"
+              title="Messagerie">
+              <MessageCircle size={18} />
+              <span className="hidden sm:inline">Messages</span>
+            </Link>
             <button onClick={deconnecter} className="text-gray-400 hover:text-gray-600 transition" title="Déconnexion">
               <LogOut size={18} />
             </button>
@@ -264,6 +270,19 @@ export default function EspaceParentPage() {
                 <p className="text-xs text-gray-500 mt-2">{reponses.length} exercice{reponses.length > 1 ? 's' : ''}</p>
               </div>
             </div>
+
+            {/* Contacter le professeur */}
+            <Link href="/espace-parent/messagerie"
+              className="flex items-center gap-4 bg-white rounded-xl border border-indigo-100 shadow-sm p-4 hover:border-indigo-300 hover:shadow-md transition group">
+              <div className="w-12 h-12 bg-indigo-100 rounded-xl flex items-center justify-center shrink-0 group-hover:bg-indigo-200 transition">
+                <MessageCircle size={22} className="text-indigo-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-gray-900 text-sm">Contacter le professeur</p>
+                <p className="text-xs text-gray-400 mt-0.5">Envoyez un message directement à l&apos;enseignant</p>
+              </div>
+              <ChevronRight size={18} className="text-gray-300 group-hover:text-indigo-400 shrink-0" />
+            </Link>
 
             {/* Derniers bulletins */}
             {bulletins.length > 0 && (
@@ -530,7 +549,7 @@ export default function EspaceParentPage() {
                           </p>
                         </div>
                         {d.date_limite && (
-                          <div className={`text-right shrink-0 ${enRetard ? 'text-red-500' : 'text-orange-500'}`}>
+                                  <div className={`text-right shrink-0 ${enRetard ? 'text-red-500' : 'text-orange-500'}`}>
                             <p className="text-xs font-bold flex items-center gap-1 justify-end">
                               <Clock size={12} />
                               {enRetard ? 'En retard' : 'Pour le'}

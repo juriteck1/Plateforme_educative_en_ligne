@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Plus, BookOpen, Users, Copy, Check, LogOut, Play, Library, Radio, UserCircle } from 'lucide-react'
+import { Plus, BookOpen, Users, Copy, Check, LogOut, Play, Library, Radio, UserCircle, MessageCircle } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Classe, Profile, Session } from '@/types'
 
@@ -96,6 +96,13 @@ export default function DashboardPage() {
             >
               <Library size={16} />
               <span className="hidden sm:inline">Bibliothèque</span>
+            </Link>
+            <Link
+              href="/dashboard/messagerie"
+              className="flex items-center gap-1.5 text-gray-500 hover:text-indigo-600 text-sm font-medium transition"
+            >
+              <MessageCircle size={16} />
+              <span className="hidden sm:inline">Messages</span>
             </Link>
             <span className="text-gray-600 text-sm hidden sm:inline">
               Bonjour, <strong>{profile?.prenom}</strong>
@@ -385,8 +392,8 @@ function EcranChargement() {
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center">
       <div className="text-center">
-        <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto mb-4" />
-        <p className="text-gray-500">Chargement...</p>
+        <div className="text-5xl mb-4 animate-bounce">📚</div>
+        <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mx-auto" />
       </div>
     </div>
   )

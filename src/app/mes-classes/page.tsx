@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { BookOpen, Play, LogOut, Star, Calendar, TrendingUp, FileText, ImageIcon, File, ExternalLink, X, UserCircle } from 'lucide-react'
+import { BookOpen, Play, LogOut, Star, Calendar, TrendingUp, FileText, ImageIcon, File, ExternalLink, X, UserCircle, Upload, CheckCircle, Loader2, Paperclip } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Classe, Session, Profile, ContenuClasse, DocumentClasse } from '@/types'
 import NotificationBell from '@/components/NotificationBell'
@@ -271,9 +271,93 @@ export default function MesClassesPage() {
 
 // ─── Carte classe élève ───────────────────────────────────────────────────────
 
+type RenduEleve = {
+  id: string
+  titre: string
+  fichier_url: string
+  type_fichier: string
+  created_at: string
+}
+
 function CarteClasseEleve({ classe }: { classe: ClasseAvecSession }) {
   const avantCours = classe.contenus.filter(c => c.type === 'avant_cours')
   const travaux = classe.contenus.filter(c => c.type === 'travail_a_faire')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [uploadEnCours, setUploadEnCours] = useState(false)
+  const [uploadOk, setUploadOk] = useState(false)
+  const [uploadErreur, setUploadErreur] = useState('')
+  const [rendus, setRendus] = useState<RenduEleve[]>([])
+  const [rendusTitre, setRendusTitre] = useState('')
+  const [showUploadForm, setShowUploadForm] = useState(false)
+
+  useEffect(() => {
+    chargerRendus()
+  }, [classe.id])
+
+  async function chargerRendus() {
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+    const { data } = await supabase
+      .from('rendus_eleves')
+      .select('id, titre, fichier_url, type_fichier, created_at')
+      .eq('classe_id', classe.id)
+      .eq('eleve_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5)
+    if (data) setRendus(data)
+  }
+
+  async function handleUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const fichier = e.target.files?.[0]
+    if (!fichier) return
+    if (!rendusTitre.trim()) {
+      setUploadErreur('Ajoute un titre pour ton rendu')
+      return
+    }
+    setUploadEnCours(true)
+    setUploadErreur('')
+
+    const supabase = createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) { setUploadEnCours(false); return }
+
+    const ext = fichier.name.split('.').pop()?.toLowerCase() || ''
+    const typeMap: Record<string, string> = { pdf: 'pdf', png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', webp: 'image' }
+    const typeFichier = typeMap[ext] || 'autre'
+
+    const filePath = `${user.id}/${classe.id}/${Date.now()}_${fichier.name}`
+    const { error: uploadErr } = await supabase.storage
+      .from('rendus-eleves')
+      .upload(filePath, fichier)
+
+    if (uploadErr) {
+      setUploadErreur('Erreur lors de l\'envoi. Vérifie la taille du fichier.')
+      setUploadEnCours(false)
+      return
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('rendus-eleves')
+      .getPublicUrl(filePath)
+
+    await supabase.from('rendus_eleves').insert({
+      eleve_id: user.id,
+      classe_id: classe.id,
+      titre: rendusTitre.trim(),
+      fichier_url: publicUrl,
+      fichier_path: filePath,
+      type_fichier: typeFichier,
+      taille: fichier.size,
+    })
+
+    setUploadOk(true)
+    setShowUploadForm(false)
+    setRendusTitre('')
+    setTimeout(() => setUploadOk(false), 3000)
+    await chargerRendus()
+    setUploadEnCours(false)
+  }
 
   function iconeDoc(type: string) {
     if (type === 'pdf') return <FileText size={14} className="text-red-500 shrink-0" />
@@ -453,6 +537,82 @@ function CarteClasseEleve({ classe }: { classe: ClasseAvecSession }) {
               </ul>
             </div>
           )}
+
+          {/* ── Rendre un devoir ── */}
+          <div className="bg-emerald-50 border border-emerald-100 rounded-2xl p-3">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-xs font-black text-emerald-700 uppercase tracking-wide">📤 Mes rendus</p>
+              {uploadOk && (
+                <span className="flex items-center gap-1 text-xs text-emerald-600 font-semibold">
+                  <CheckCircle size={12} /> Envoyé !
+                </span>
+              )}
+            </div>
+
+            {/* Liste des rendus existants */}
+            {rendus.length > 0 && (
+              <ul className="space-y-1.5 mb-2">
+                {rendus.map(r => (
+                  <li key={r.id}>
+                    <a href={r.fichier_url} target="_blank" rel="noopener noreferrer"
+                      className="flex items-center gap-2 hover:bg-emerald-100 rounded-lg px-1 py-0.5 transition group">
+                      {iconeDoc(r.type_fichier)}
+                      <span className="text-xs font-medium text-gray-700 truncate flex-1 group-hover:text-emerald-700">
+                        {r.titre}
+                      </span>
+                      <span className="text-xs text-gray-400 shrink-0">
+                        {new Date(r.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}
+                      </span>
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {/* Formulaire upload */}
+            {showUploadForm ? (
+              <div className="space-y-2">
+                <input
+                  type="text"
+                  value={rendusTitre}
+                  onChange={e => setRendusTitre(e.target.value)}
+                  placeholder="Nom du devoir (ex: Exercices ch.3)"
+                  className="w-full border border-emerald-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400 bg-white"
+                />
+                <div className="flex gap-2">
+                  <label className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold cursor-pointer transition ${
+                    uploadEnCours ? 'bg-gray-100 text-gray-400' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                  }`}>
+                    {uploadEnCours
+                      ? <><Loader2 size={13} className="animate-spin" /> Envoi…</>
+                      : <><Paperclip size={13} /> Choisir un fichier</>}
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx"
+                      onChange={handleUpload}
+                      disabled={uploadEnCours}
+                      className="hidden"
+                    />
+                  </label>
+                  <button
+                    onClick={() => { setShowUploadForm(false); setRendusTitre(''); setUploadErreur('') }}
+                    className="px-3 py-2 rounded-xl text-xs font-semibold text-gray-500 hover:bg-gray-100 transition"
+                  >
+                    Annuler
+                  </button>
+                </div>
+                {uploadErreur && <p className="text-xs text-red-500">{uploadErreur}</p>}
+              </div>
+            ) : (
+              <button
+                onClick={() => setShowUploadForm(true)}
+                className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-100 border border-dashed border-emerald-300 transition"
+              >
+                <Upload size={13} /> Déposer un devoir
+              </button>
+            )}
+          </div>
         </div>
       </div>
     </div>

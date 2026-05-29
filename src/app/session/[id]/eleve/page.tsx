@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Send, Video, ExternalLink, CheckCircle2, BookOpen, ClipboardList, Calendar, FileText, ImageIcon, File, Music, Link2, MessageCircle, X, Hand, LogOut, Megaphone } from 'lucide-react'
+import { Send, Video, ExternalLink, CheckCircle2, BookOpen, ClipboardList, Calendar, FileText, ImageIcon, File, Music, Link2, MessageCircle, X, Hand, LogOut, Megaphone, Upload, Loader2, CheckCircle, Paperclip } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Session, Exercice, Reponse, ContenuClasse, DocumentClasse, ContenuSession, MessageSession, Profile } from '@/types'
 
@@ -24,6 +24,13 @@ export default function SalleElevePage() {
   const [confirmerQuitter, setConfirmerQuitter] = useState(false)
   const [mainLevee, setMainLevee] = useState(false)
   const [annonce, setAnnonce] = useState<string | null>(null)
+  // Upload devoirs
+  const uploadRef = useRef<HTMLInputElement>(null)
+  const [uploadEnCours, setUploadEnCours] = useState(false)
+  const [uploadOk, setUploadOk] = useState(false)
+  const [uploadErreur, setUploadErreur] = useState('')
+  const [uploadTitre, setUploadTitre] = useState('')
+  const [showUploadPanel, setShowUploadPanel] = useState(false)
 
   useEffect(() => {
     let channel: ReturnType<ReturnType<typeof createClient>['channel']> | null = null
@@ -166,6 +173,34 @@ export default function SalleElevePage() {
       .update({ quitte_a: new Date().toISOString() })
       .eq('session_id', sessionId).eq('eleve_id', userId)
     router.push('/mes-classes')
+  }
+
+  async function handleUploadDevoir(e: React.ChangeEvent<HTMLInputElement>) {
+    const fichier = e.target.files?.[0]
+    if (!fichier || !userId) return
+    if (!uploadTitre.trim()) { setUploadErreur('Ajoute un titre'); return }
+    setUploadEnCours(true); setUploadErreur('')
+    const supabase = createClient()
+    const ext = fichier.name.split('.').pop()?.toLowerCase() || ''
+    const typeMap: Record<string, string> = { pdf: 'pdf', png: 'image', jpg: 'image', jpeg: 'image', gif: 'image', webp: 'image' }
+    const typeFichier = typeMap[ext] || 'autre'
+    const filePath = `${userId}/${session?.classe_id || 'session'}/${Date.now()}_${fichier.name}`
+    const { error: upErr } = await supabase.storage.from('rendus-eleves').upload(filePath, fichier)
+    if (upErr) { setUploadErreur('Erreur envoi fichier'); setUploadEnCours(false); return }
+    const { data: { publicUrl } } = supabase.storage.from('rendus-eleves').getPublicUrl(filePath)
+    await supabase.from('rendus_eleves').insert({
+      eleve_id: userId,
+      classe_id: session?.classe_id,
+      session_id: sessionId,
+      titre: uploadTitre.trim(),
+      fichier_url: publicUrl,
+      fichier_path: filePath,
+      type_fichier: typeFichier,
+      taille: fichier.size,
+    })
+    setUploadOk(true); setShowUploadPanel(false); setUploadTitre('')
+    setTimeout(() => setUploadOk(false), 4000)
+    setUploadEnCours(false)
   }
 
   async function envoyerReponse(exerciceId: string, contenu: string) {
@@ -333,7 +368,7 @@ export default function SalleElevePage() {
       <div className="flex-1 max-w-6xl mx-auto w-full px-4 py-6 flex gap-6 items-start">
 
         {/* ── Colonne gauche : ressources (sticky) ─────────────── */}
-        {(avantCours.length > 0 || travaux.length > 0 || documents.length > 0 || comptines.length > 0 || sourates.length > 0 || videos.length > 0) && (
+        {(true) && (
           <aside className="w-72 shrink-0 space-y-4 sticky top-24 hidden lg:block">
 
             {/* À voir avant le cours */}
@@ -409,6 +444,49 @@ export default function SalleElevePage() {
                 </ul>
               </div>
             )}
+
+            {/* Rendre un devoir */}
+            <div className="bg-white rounded-2xl border-2 border-emerald-100 overflow-hidden shadow-sm">
+              <div className="bg-emerald-50 px-4 py-3 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <div className="w-7 h-7 bg-emerald-100 rounded-lg flex items-center justify-center">
+                    <Upload size={14} className="text-emerald-600" />
+                  </div>
+                  <h3 className="font-black text-emerald-700 text-sm">Rendre un devoir</h3>
+                </div>
+                {uploadOk && <CheckCircle size={16} className="text-emerald-500" />}
+              </div>
+              <div className="px-4 py-3 space-y-2">
+                {showUploadPanel ? (
+                  <>
+                    <input
+                      type="text"
+                      value={uploadTitre}
+                      onChange={e => setUploadTitre(e.target.value)}
+                      placeholder="Nom du devoir"
+                      className="w-full border border-emerald-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400"
+                    />
+                    <div className="flex gap-2">
+                      <label className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold cursor-pointer transition ${
+                        uploadEnCours ? 'bg-gray-100 text-gray-400' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}>
+                        {uploadEnCours ? <><Loader2 size={12} className="animate-spin" /> Envoi…</> : <><Paperclip size={12} /> Fichier</>}
+                        <input ref={uploadRef} type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx"
+                          onChange={handleUploadDevoir} disabled={uploadEnCours} className="hidden" />
+                      </label>
+                      <button onClick={() => { setShowUploadPanel(false); setUploadTitre(''); setUploadErreur('') }}
+                        className="px-3 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100 transition">Annuler</button>
+                    </div>
+                    {uploadErreur && <p className="text-xs text-red-500">{uploadErreur}</p>}
+                  </>
+                ) : (
+                  <button onClick={() => setShowUploadPanel(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-emerald-700 hover:bg-emerald-50 border border-dashed border-emerald-300 transition">
+                    <Upload size={12} /> {uploadOk ? '✅ Envoyé ! Déposer un autre' : 'Déposer un devoir'}
+                  </button>
+                )}
+              </div>
+            </div>
 
             {/* Comptines */}
             {sections.includes('comptine') && comptines.length > 0 && (
@@ -503,7 +581,7 @@ export default function SalleElevePage() {
         )}
 
         {/* ── Version mobile des ressources (en haut) ──────────── */}
-        {(avantCours.length > 0 || travaux.length > 0 || documents.length > 0 || comptines.length > 0 || sourates.length > 0 || videos.length > 0) && (
+        {(true) && (
           <div className="lg:hidden w-full space-y-3 mb-2">
             {avantCours.length > 0 && (
               <details className="bg-white rounded-2xl border-2 border-blue-100 overflow-hidden shadow-sm">
@@ -564,6 +642,40 @@ export default function SalleElevePage() {
                 </ul>
               </details>
             )}
+
+            {/* Rendre un devoir — mobile */}
+            <details className="bg-white rounded-2xl border-2 border-emerald-100 overflow-hidden shadow-sm">
+              <summary className="bg-emerald-50 px-4 py-3 flex items-center gap-2 cursor-pointer">
+                <Upload size={14} className="text-emerald-600" />
+                <span className="font-black text-emerald-700 text-sm">📤 Rendre un devoir {uploadOk ? '✅' : ''}</span>
+              </summary>
+              <div className="px-4 py-3 space-y-2">
+                {showUploadPanel ? (
+                  <>
+                    <input type="text" value={uploadTitre} onChange={e => setUploadTitre(e.target.value)}
+                      placeholder="Nom du devoir"
+                      className="w-full border border-emerald-300 rounded-lg px-3 py-2 text-xs text-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-400" />
+                    <div className="flex gap-2">
+                      <label className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl text-xs font-semibold cursor-pointer ${
+                        uploadEnCours ? 'bg-gray-100 text-gray-400' : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                      }`}>
+                        {uploadEnCours ? <><Loader2 size={12} className="animate-spin" /> Envoi…</> : <><Paperclip size={12} /> Choisir</>}
+                        <input type="file" accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx"
+                          onChange={handleUploadDevoir} disabled={uploadEnCours} className="hidden" />
+                      </label>
+                      <button onClick={() => { setShowUploadPanel(false); setUploadTitre(''); setUploadErreur('') }}
+                        className="px-3 py-2 rounded-xl text-xs text-gray-500 hover:bg-gray-100">Annuler</button>
+                    </div>
+                    {uploadErreur && <p className="text-xs text-red-500">{uploadErreur}</p>}
+                  </>
+                ) : (
+                  <button onClick={() => setShowUploadPanel(true)}
+                    className="w-full flex items-center justify-center gap-2 py-2 rounded-xl text-xs font-semibold text-emerald-700 border border-dashed border-emerald-300 hover:bg-emerald-50 transition">
+                    <Upload size={12} /> Déposer un devoir
+                  </button>
+                )}
+              </div>
+            </details>
 
             {/* Comptines mobile */}
             {sections.includes('comptine') && comptines.length > 0 && (

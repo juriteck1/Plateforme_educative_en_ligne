@@ -7,7 +7,7 @@ import { Pause, Play, Square, Send, Users, BookOpen, Video, ExternalLink, Librar
 import { createClient } from '@/lib/supabase/client'
 import type { Session, Exercice, Reponse, Profile, Presence, ExerciceModele, DocumentClasse, ContenuSession, SectionActive, MessageSession } from '@/types'
 
-type OngletActif = 'exercice' | 'presences' | 'documents' | 'contenu' | 'chat'
+type OngletActif = 'exercice' | 'presences' | 'documents' | 'contenu' | 'chat' | 'rendus'
 
 export default function SalleEnseignantPage() {
   const { id: sessionId } = useParams<{ id: string }>()
@@ -263,6 +263,7 @@ export default function SalleEnseignantPage() {
               { id: 'documents', label: `Docs`,       icon: <FileText size={13} /> },
               ...(hasContenu ? [{ id: 'contenu', label: `Contenu`, icon: <Music size={13} /> }] : []),
               { id: 'chat', label: 'Chat', icon: <span className="relative inline-flex items-center gap-1"><MessageCircle size={13} />{nbMainsLevees > 0 && <span className="bg-orange-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full leading-none">{nbMainsLevees}</span>}</span> },
+              { id: 'rendus', label: 'Rendus', icon: <Upload size={13} /> },
             ]
             return (
               <>
@@ -319,6 +320,12 @@ export default function SalleEnseignantPage() {
                       sessionId={sessionId}
                       messages={messages}
                       roleAuteur="enseignant"
+                    />
+                  )}
+                  {onglet === 'rendus' && (
+                    <PanneauRendus
+                      sessionId={sessionId}
+                      classeId={session.classe_id}
                     />
                   )}
                 </div>
@@ -1655,6 +1662,109 @@ function PanneauChat({
           <p className="text-indigo-400 text-xs text-center">L&apos;annonce s&apos;affichera en bannière sur l&apos;écran de chaque élève pendant 8 secondes.</p>
         )}
       </div>
+    </div>
+  )
+}
+
+// ─── Panneau Rendus ───────────────────────────────────────────────────────────
+
+type RenduRow = {
+  id: string
+  titre: string
+  fichier_url: string
+  type_fichier: string
+  created_at: string
+  taille: number | null
+  eleve: { prenom: string; nom: string } | null
+}
+
+function PanneauRendus({ sessionId, classeId }: { sessionId: string; classeId: string }) {
+  const [rendus, setRendus] = useState<RenduRow[]>([])
+  const [chargement, setChargement] = useState(true)
+
+  useEffect(() => {
+    async function charger() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('rendus_eleves')
+        .select('id, titre, fichier_url, type_fichier, created_at, taille, eleve:profiles!rendus_eleves_eleve_id_fkey(prenom, nom)')
+        .eq('session_id', sessionId)
+        .order('created_at', { ascending: false })
+      setRendus((data || []) as unknown as RenduRow[])
+      setChargement(false)
+    }
+    charger()
+
+    // Realtime pour les nouveaux rendus
+    const supabase = createClient()
+    const channel = supabase.channel(`rendus-${sessionId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'rendus_eleves', filter: `session_id=eq.${sessionId}` },
+        () => charger())
+      .subscribe()
+    return () => { supabase.removeChannel(channel) }
+  }, [sessionId])
+
+  function icone(type: string) {
+    if (type === 'pdf') return <FileText size={14} className="text-red-400 shrink-0" />
+    if (type === 'image') return <ImageIcon size={14} className="text-blue-400 shrink-0" />
+    return <File size={14} className="text-gray-400 shrink-0" />
+  }
+
+  function tailleFmt(taille: number | null) {
+    if (!taille) return ''
+    if (taille < 1024) return `${taille} o`
+    if (taille < 1024 * 1024) return `${(taille / 1024).toFixed(0)} Ko`
+    return `${(taille / 1024 / 1024).toFixed(1)} Mo`
+  }
+
+  if (chargement) return (
+    <div className="flex items-center justify-center py-12">
+      <div className="w-6 h-6 border-2 border-gray-600 border-t-indigo-400 rounded-full animate-spin" />
+    </div>
+  )
+
+  return (
+    <div className="p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <Upload size={16} className="text-emerald-400" />
+        <h3 className="text-white font-bold text-sm">Devoirs rendus</h3>
+        {rendus.length > 0 && (
+          <span className="bg-emerald-600 text-white text-xs font-black px-2 py-0.5 rounded-full">{rendus.length}</span>
+        )}
+      </div>
+
+      {rendus.length === 0 ? (
+        <div className="text-center py-10 text-gray-500">
+          <div className="text-3xl mb-2">📤</div>
+          <p className="text-sm">Aucun rendu pour l&apos;instant</p>
+        </div>
+      ) : (
+        <ul className="space-y-2">
+          {rendus.map(r => (
+            <li key={r.id} className="bg-gray-700 rounded-xl p-3">
+              <div className="flex items-start gap-3">
+                {icone(r.type_fichier)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white text-xs font-bold truncate">{r.titre}</p>
+                  {r.eleve && (
+                    <p className="text-gray-400 text-xs">{r.eleve.prenom} {r.eleve.nom}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-1">
+                    <p className="text-gray-500 text-xs">
+                      {new Date(r.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                    {r.taille && <span className="text-gray-500 text-xs">{tailleFmt(r.taille)}</span>}
+                  </div>
+                </div>
+                <a href={r.fichier_url} target="_blank" rel="noopener noreferrer"
+                  className="text-indigo-400 hover:text-indigo-300 shrink-0">
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   )
 }

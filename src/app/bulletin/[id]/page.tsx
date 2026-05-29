@@ -118,13 +118,18 @@ export default function BulletinPage() {
             <span className="text-xs bg-amber-400 text-amber-900 font-bold px-2 py-0.5 rounded-full">BROUILLON</span>
           )}
         </div>
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-2 bg-white text-indigo-700 font-semibold px-5 py-2 rounded-lg hover:bg-indigo-50 transition text-sm"
-        >
-          <Printer size={16} />
-          Imprimer / Télécharger PDF
-        </button>
+        <div className="flex items-center gap-3">
+          <span className="text-indigo-300 text-xs hidden sm:block">
+            💡 Dans la boîte de dialogue → sélectionner &ldquo;Enregistrer en PDF&rdquo;
+          </span>
+          <button
+            onClick={() => window.print()}
+            className="flex items-center gap-2 bg-white text-indigo-700 font-bold px-5 py-2 rounded-lg hover:bg-indigo-50 transition text-sm shadow"
+          >
+            <Download size={16} />
+            Télécharger PDF
+          </button>
+        </div>
       </div>
 
       {/* Contenu du bulletin */}
