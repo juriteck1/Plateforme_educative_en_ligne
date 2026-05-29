@@ -152,9 +152,10 @@ export default function SalleElevePage() {
   async function leverMain() {
     if (mainLevee || !userId) return
     const supabase = createClient()
-    await supabase.from('messages_session').insert({
+    const { error } = await supabase.from('messages_session').insert({
       session_id: sessionId, auteur_id: userId, contenu: '🖐 Main levée', type: 'main_levee',
     })
+    if (error) { console.error('leverMain error:', error); return }
     setMainLevee(true)
   }
 

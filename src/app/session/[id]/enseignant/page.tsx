@@ -24,6 +24,7 @@ export default function SalleEnseignantPage() {
   const [contenusSession, setContenusSession] = useState<ContenuSession[]>([])
   const [messages, setMessages] = useState<(MessageSession & { auteur: Profile })[]>([])
   const [nbMainsLevees, setNbMainsLevees] = useState(0)
+  const [toastMainLevee, setToastMainLevee] = useState<string | null>(null)
 
   useEffect(() => {
     chargerSession()
@@ -118,8 +119,17 @@ export default function SalleEnseignantPage() {
       .on('postgres_changes', {
         event: 'INSERT', schema: 'public', table: 'messages_session',
         filter: `session_id=eq.${sessionId}`,
-      }, () => {
-        chargerMessages()
+      }, async (payload: any) => {
+        await chargerMessages()
+        if (payload.new?.type === 'main_levee') {
+          // Récupérer le nom de l'élève
+          const supabase2 = createClient()
+          const { data: profil } = await supabase2
+            .from('profiles').select('prenom, nom').eq('id', payload.new.auteur_id).single()
+          const nom = profil ? `${profil.prenom} ${profil.nom}` : 'Un élève'
+          setToastMainLevee(nom)
+          setTimeout(() => setToastMainLevee(null), 5000)
+        }
       })
       .subscribe()
     return () => { supabase.removeChannel(channel) }
@@ -166,6 +176,15 @@ export default function SalleEnseignantPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
+
+      {/* ── Toast main levée ──────────────────────────────────── */}
+      {toastMainLevee && (
+        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-orange-500 text-white px-5 py-3 rounded-2xl shadow-2xl animate-bounce-once pointer-events-none">
+          <Hand size={20} className="shrink-0" />
+          <span className="font-black text-sm">🖐 {toastMainLevee} lève la main !</span>
+        </div>
+      )}
+
       {/* Barre du haut */}
       <header className="bg-gray-800 border-b border-gray-700 px-3 sm:px-4 py-3 flex items-center justify-between gap-2">
         <div className="flex items-center gap-2 sm:gap-3 min-w-0">
@@ -243,7 +262,7 @@ export default function SalleEnseignantPage() {
               { id: 'presences', label: `Élèves`,     icon: <Users size={13} /> },
               { id: 'documents', label: `Docs`,       icon: <FileText size={13} /> },
               ...(hasContenu ? [{ id: 'contenu', label: `Contenu`, icon: <Music size={13} /> }] : []),
-              { id: 'chat', label: 'Chat', icon: <span className="relative inline-flex"><MessageCircle size={13} className={nbMainsLevees > 0 ? 'text-orange-400' : ''} />{nbMainsLevees > 0 && <span className="absolute -top-1 -right-1 w-2 h-2 bg-orange-400 rounded-full animate-pulse" />}</span> },
+              { id: 'chat', label: 'Chat', icon: <span className="relative inline-flex items-center gap-1"><MessageCircle size={13} />{nbMainsLevees > 0 && <span className="bg-orange-500 text-white text-xs font-black px-1.5 py-0.5 rounded-full leading-none">{nbMainsLevees}</span>}</span> },
             ]
             return (
               <>
@@ -1478,12 +1497,13 @@ function PanneauChat({
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) { setEnvoi(false); return }
-    await supabase.from('messages_session').insert({
+    const { error } = await supabase.from('messages_session').insert({
       session_id: sessionId,
       auteur_id: user.id,
       contenu,
       type,
     })
+    if (error) { console.error('envoyerMessage error:', error); setEnvoi(false); return }
     setTexte('')
     if (type === 'main_levee') setMainLevee(true)
     if (type === 'annonce') setModeAnnonce(false)
@@ -1492,11 +1512,31 @@ function PanneauChat({
 
   const isEnseignant = roleAuteur === 'enseignant'
 
+  const mainsLevees = messages.filter(m => m.type === 'main_levee')
+
   return (
     <div className="flex flex-col h-full">
+
+      {/* ── Bloc mains levées (enseignant uniquement) ─────────── */}
+      {isEnseignant && mainsLevees.length > 0 && (
+        <div className="shrink-0 bg-orange-500/10 border-b border-orange-500/30 px-3 py-2">
+          <div className="flex items-center gap-2 mb-1.5">
+            <Hand size={14} className="text-orange-400" />
+            <span className="text-orange-400 text-xs font-black uppercase tracking-wide">Mains levées ({mainsLevees.length})</span>
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {mainsLevees.map(m => (
+              <span key={m.id} className="bg-orange-500/20 border border-orange-500/40 text-orange-300 text-xs font-semibold px-2 py-1 rounded-lg">
+                🖐 {m.auteur?.prenom} {m.auteur?.nom}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Liste des messages */}
       <div className="flex-1 overflow-y-auto p-3 space-y-2 min-h-0" style={{ maxHeight: 'calc(100vh - 280px)' }}>
-        {messages.length === 0 ? (
+        {messages.filter(m => m.type !== 'main_levee').length === 0 ? (
           <div className="text-center py-10">
             <div className="text-4xl mb-3">💬</div>
             <p className="text-gray-500 text-sm">Le chat est vide.<br />Les messages apparaîtront ici.</p>

@@ -74,19 +74,12 @@ function InscriptionForm() {
         setChargement(false)
         return
       }
-      const { data: enfantProfile } = await supabase
-        .from('profiles')
-        .select('id, role')
-        .eq('email', emailEnfant.trim().toLowerCase())
-        .single()
+      // Utilise une fonction SECURITY DEFINER pour contourner le RLS
+      const { data: eleveId, error: eleveErr } = await supabase
+        .rpc('chercher_eleve_par_email', { p_email: emailEnfant.trim() })
 
-      if (!enfantProfile) {
+      if (eleveErr || !eleveId) {
         setErreur(ins.erreurs.eleveIntrouvable)
-        setChargement(false)
-        return
-      }
-      if (enfantProfile.role !== 'eleve') {
-        setErreur(ins.erreurs.pasEleve)
         setChargement(false)
         return
       }
@@ -122,16 +115,13 @@ function InscriptionForm() {
     }, { onConflict: 'id' })
 
     if (role === 'parent' && emailEnfant.trim()) {
-      const { data: enfantData } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', emailEnfant.trim().toLowerCase())
-        .single()
+      const { data: eleveId } = await supabase
+        .rpc('chercher_eleve_par_email', { p_email: emailEnfant.trim() })
 
-      if (enfantData) {
+      if (eleveId) {
         await supabase.from('parent_eleve').insert({
           parent_id: data.user.id,
-          eleve_id: enfantData.id,
+          eleve_id: eleveId,
         })
       }
     }
