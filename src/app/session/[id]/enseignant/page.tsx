@@ -949,7 +949,7 @@ function PanneauPresences({
       const supabase = createClient()
       const { data: inscs } = await supabase
         .from('inscriptions').select('eleve:profiles(*)').eq('classe_id', classeId)
-      setEleves((inscs || []).map((i: { eleve: any }) => i.eleve))
+      setEleves((inscs || []).map((i: { eleve: any }) => i.eleve).filter((e: any) => e?.role === 'eleve'))
 
       // Statuts d'appel déjà enregistrés
       const { data: pres } = await supabase
