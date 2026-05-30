@@ -158,7 +158,7 @@ export default function MessageriePage() {
     const supabase = createClient()
     const { data } = await supabase
       .from('messages_internes')
-      .select('*')
+      .select('*, expediteur:profiles!messages_internes_expediteur_id_fkey(*)')
       .eq('classe_id', classeId)
       .or(`and(expediteur_id.eq.${moiId},destinataire_id.eq.${parentId}),and(expediteur_id.eq.${parentId},destinataire_id.eq.${moiId})`)
       .order('created_at', { ascending: true })
@@ -289,6 +289,7 @@ export default function MessageriePage() {
                             </span>
                           )}
                         </div>
+                        <p className="text-xs text-gray-400 truncate">{c.parent.email}</p>
                         <p className="text-xs text-indigo-500 font-medium">{c.classe.nom}</p>
                         {c.dernierMessage && (
                           <p className="text-xs text-gray-400 truncate mt-0.5">{c.dernierMessage}</p>
@@ -319,6 +320,7 @@ export default function MessageriePage() {
                 </div>
                 <div>
                   <p className="font-bold text-gray-900">{contactActif.parent.prenom} {contactActif.parent.nom}</p>
+                  <p className="text-xs text-gray-400">{contactActif.parent.email}</p>
                   <p className="text-xs text-indigo-500">Parent · {contactActif.classe.nom}</p>
                 </div>
               </div>
