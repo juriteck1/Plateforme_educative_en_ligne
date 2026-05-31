@@ -163,5 +163,3 @@ export interface Bulletin {
   classe?: Classe
   matieres?: BulletinMatiere[]
 }
-ieres?: BulletinMatiere[]
-}
