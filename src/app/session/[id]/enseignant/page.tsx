@@ -25,6 +25,7 @@ export default function SalleEnseignantPage() {
   const [messages, setMessages] = useState<(MessageSession & { auteur: Profile })[]>([])
   const [nbMainsLevees, setNbMainsLevees] = useState(0)
   const [toastMainLevee, setToastMainLevee] = useState<string | null>(null)
+  const [showConfirmTerminer, setShowConfirmTerminer] = useState(false)
 
   useEffect(() => {
     chargerSession()
@@ -177,6 +178,27 @@ export default function SalleEnseignantPage() {
   return (
     <div className="min-h-screen bg-gray-900 flex flex-col">
 
+      {/* ── Modale confirmation Terminer ── */}
+      {showConfirmTerminer && (
+        <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center px-4">
+          <div className="bg-gray-800 border border-gray-700 rounded-2xl p-6 w-full max-w-sm shadow-2xl text-center">
+            <div className="text-5xl mb-3">🔴</div>
+            <h3 className="text-white font-bold text-lg mb-2">Terminer le cours ?</h3>
+            <p className="text-gray-400 text-sm mb-5">Le cours sera clôturé et tous les élèves déconnectés. Cette action est irréversible.</p>
+            <div className="flex gap-3">
+              <button onClick={() => setShowConfirmTerminer(false)}
+                className="flex-1 border border-gray-600 text-gray-300 py-2.5 rounded-xl font-medium hover:bg-gray-700 transition text-sm">
+                Annuler
+              </button>
+              <button onClick={() => { setShowConfirmTerminer(false); changerStatut('terminee') }}
+                className="flex-1 bg-red-500 text-white py-2.5 rounded-xl font-bold hover:bg-red-600 transition text-sm">
+                Terminer le cours
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Toast main levée ──────────────────────────────────── */}
       {toastMainLevee && (
         <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 bg-orange-500 text-white px-5 py-3 rounded-2xl shadow-2xl animate-bounce-once pointer-events-none">
@@ -219,7 +241,7 @@ export default function SalleEnseignantPage() {
               <Play size={13} /> <span className="hidden sm:inline">Reprendre</span>
             </button>
           )}
-          <button onClick={() => changerStatut('terminee')}
+          <button onClick={() => setShowConfirmTerminer(true)}
             className="flex items-center gap-1 bg-red-500 text-white px-2 sm:px-3 py-1.5 rounded-lg text-xs sm:text-sm font-medium hover:bg-red-600 transition">
             <Square size={13} /> <span className="hidden sm:inline">Terminer</span>
           </button>
@@ -231,8 +253,8 @@ export default function SalleEnseignantPage() {
         const sections = session.sections_actives || []
         const hasContenu = sections.some(s => ['comptine', 'sourate', 'video'].includes(s))
         const tabs = [
-          { id: 'exercice',  label: 'Exercices', icon: <BookOpen size={13} /> },
           { id: 'presences', label: 'Élèves',    icon: <Users size={13} /> },
+          { id: 'exercice',  label: 'Exercices', icon: <BookOpen size={13} /> },
           { id: 'documents', label: 'Docs',      icon: <FileText size={13} /> },
           ...(hasContenu ? [{ id: 'contenu', label: 'Contenu', icon: <Music size={13} /> }] : []),
           { id: 'chat', label: 'Chat', icon: (
@@ -438,17 +460,17 @@ function DashboardSession({
       )}
 
       {/* Stats en direct */}
-      <div className="grid grid-cols-4 gap-3">
+      <div className="grid grid-cols-4 gap-2">
         {[
           { label: 'Connectés', value: presences.length, icon: '👥', color: 'from-blue-600/20 to-blue-700/10', text: 'text-blue-300', border: 'border-blue-500/20' },
           { label: 'Exercices', value: exercices.length, icon: '📝', color: 'from-indigo-600/20 to-indigo-700/10', text: 'text-indigo-300', border: 'border-indigo-500/20' },
           { label: 'Réponses', value: totalReponses, icon: '✉️', color: 'from-violet-600/20 to-violet-700/10', text: 'text-violet-300', border: 'border-violet-500/20' },
           { label: 'Moy. classe', value: noteMoy ? `${noteMoy}/20` : '—', icon: '⭐', color: 'from-yellow-600/20 to-yellow-700/10', text: 'text-yellow-300', border: 'border-yellow-500/20' },
         ].map(stat => (
-          <div key={stat.label} className={`bg-gradient-to-br ${stat.color} border ${stat.border} rounded-2xl px-4 py-4 text-center`}>
-            <div className="text-2xl mb-1">{stat.icon}</div>
-            <p className={`text-2xl font-black ${stat.text}`}>{stat.value}</p>
-            <p className="text-gray-400 text-xs mt-0.5 font-medium">{stat.label}</p>
+          <div key={stat.label} className={`bg-gradient-to-br ${stat.color} border ${stat.border} rounded-xl px-3 py-2 text-center`}>
+            <div className="text-lg mb-0.5">{stat.icon}</div>
+            <p className={`text-xl font-black ${stat.text}`}>{stat.value}</p>
+            <p className="text-gray-400 text-xs font-medium">{stat.label}</p>
           </div>
         ))}
       </div>
