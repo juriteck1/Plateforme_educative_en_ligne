@@ -195,17 +195,31 @@ export default function MessageriePage() {
   async function envoyer() {
     if (!texte.trim() || !moi || !contactActif || envoi) return
     setEnvoi(true)
+    const contenuEnvoye = texte.trim()
     const supabase = createClient()
-    const { error } = await supabase.from('messages_internes').insert({
+    const { data: inserted, error } = await supabase.from('messages_internes').insert({
       classe_id: contactActif.classe.id,
       expediteur_id: moi.id,
       destinataire_id: contactActif.parent.id,
-      contenu: texte.trim(),
-    })
+      contenu: contenuEnvoye,
+    }).select().single()
+
     if (!error) {
       setTexte('')
-      await chargerConversation(moi.id, contactActif.parent.id, contactActif.classe.id)
-      await chargerDonnees()
+      // Ajouter le message immédiatement dans l'état (sans attendre le rechargement)
+      const nouveauMsg: MessageInterne = inserted || {
+        id: Math.random().toString(36),
+        classe_id: contactActif.classe.id,
+        expediteur_id: moi.id,
+        destinataire_id: contactActif.parent.id,
+        contenu: contenuEnvoye,
+        lu: true,
+        created_at: new Date().toISOString(),
+        expediteur: moi,
+      }
+      setMessages(prev => [...prev, nouveauMsg])
+      // Recharger la liste des contacts pour mettre à jour le dernier message
+      chargerDonnees()
     }
     setEnvoi(false)
   }
