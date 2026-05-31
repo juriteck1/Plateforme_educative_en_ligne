@@ -20,6 +20,7 @@ type MessageInterne = {
 
 type Contact = {
   parent: Profile
+  eleve: Profile | null
   classe: { id: string; nom: string }
   dernierMessage: string | null
   nonLus: number
@@ -97,10 +98,14 @@ export default function MessageriePage() {
 
     const parentIds = [...new Set(liens.map(l => l.parent_id))]
 
-    // Charger les profils parents
+    // Charger les profils parents et élèves
     const { data: parents } = await supabase
       .from('profiles').select('*')
       .in('id', parentIds)
+
+    const { data: elevesProfiles } = await supabase
+      .from('profiles').select('*')
+      .in('id', eleveIds)
 
     // Charger tous les messages avec ces parents
     const { data: allMessages } = await supabase
@@ -134,8 +139,11 @@ export default function MessageriePage() {
       const nonLus = conv.filter(m => !m.lu && m.destinataire_id === user.id).length
       const dernier = conv[0]
 
+      const eleve = elevesProfiles?.find(e => e.id === lien.eleve_id) || null
+
       contactsMap.set(key, {
         parent,
+        eleve,
         classe,
         dernierMessage: dernier?.contenu || null,
         nonLus,
@@ -291,6 +299,9 @@ export default function MessageriePage() {
                         </div>
                         <p className="text-xs text-gray-400 truncate">{c.parent.email}</p>
                         <p className="text-xs text-indigo-500 font-medium">{c.classe.nom}</p>
+                        {c.eleve && (
+                          <p className="text-xs text-gray-500">👤 Parent de <span className="font-medium">{c.eleve.prenom} {c.eleve.nom}</span></p>
+                        )}
                         {c.dernierMessage && (
                           <p className="text-xs text-gray-400 truncate mt-0.5">{c.dernierMessage}</p>
                         )}
@@ -321,7 +332,10 @@ export default function MessageriePage() {
                 <div>
                   <p className="font-bold text-gray-900">{contactActif.parent.prenom} {contactActif.parent.nom}</p>
                   <p className="text-xs text-gray-400">{contactActif.parent.email}</p>
-                  <p className="text-xs text-indigo-500">Parent · {contactActif.classe.nom}</p>
+                  <p className="text-xs text-indigo-500">
+                    Parent · {contactActif.classe.nom}
+                    {contactActif.eleve && <span className="text-gray-400"> · 👤 {contactActif.eleve.prenom} {contactActif.eleve.nom}</span>}
+                  </p>
                 </div>
               </div>
 
@@ -362,6 +376,24 @@ export default function MessageriePage() {
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); envoyer() } }}
                     placeholder={`Message à ${contactActif.parent.prenom}…`}
                     className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+                  />
+                  <button
+                    onClick={envoyer}
+                    disabled={!texte.trim() || envoi}
+                    className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition disabled:opacity-40"
+                  >
+                    {envoi ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
                   />
                   <button
                     onClick={envoyer}
