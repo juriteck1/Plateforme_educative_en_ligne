@@ -393,21 +393,3 @@ export default function MessageriePage() {
     </div>
   )
 }
-.5 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                  />
-                  <button
-                    onClick={envoyer}
-                    disabled={!texte.trim() || envoi}
-                    className="w-10 h-10 bg-indigo-600 text-white rounded-xl flex items-center justify-center hover:bg-indigo-700 transition disabled:opacity-40"
-                  >
-                    {envoi ? <Loader2 size={16} className="animate-spin" /> : <Send size={16} />}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  )
-}
