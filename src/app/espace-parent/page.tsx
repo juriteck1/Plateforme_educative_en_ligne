@@ -6,7 +6,7 @@ import Link from 'next/link'
 import {
   BookOpen, LogOut, GraduationCap, Calendar, ClipboardList,
   FileText, Star, Clock, CheckCircle, AlertCircle, TrendingUp,
-  Eye, ChevronRight, User, MessageCircle
+  Eye, ChevronRight, User, MessageCircle, Megaphone, Bell, StickyNote
 } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import type { Profile, Bulletin, BulletinMatiere, Classe, Session } from '@/types'
@@ -41,6 +41,16 @@ interface ContenuClasse {
   classe?: { nom: string }
 }
 
+interface AnnonceClasse {
+  id: string
+  type: 'annonce' | 'rappel' | 'note'
+  titre: string
+  contenu: string | null
+  epingler: boolean
+  created_at: string
+  classe?: { nom: string }
+}
+
 export default function EspaceParentPage() {
   const router = useRouter()
   const [parent, setParent] = useState<Profile | null>(null)
@@ -50,6 +60,7 @@ export default function EspaceParentPage() {
   const [presences, setPresences] = useState<Presence[]>([])
   const [reponses, setReponses] = useState<ReponseAvecExercice[]>([])
   const [devoirs, setDevoirs] = useState<ContenuClasse[]>([])
+  const [annonces, setAnnonces] = useState<AnnonceClasse[]>([])
   const [onglet, setOnglet] = useState<Onglet>('accueil')
   const [chargement, setChargement] = useState(true)
 
@@ -79,6 +90,10 @@ export default function EspaceParentPage() {
     const eleveId = lien.eleve_id
 
     // Charger toutes les données en parallèle
+    // Récupérer les classes de l'élève (utilisé plusieurs fois)
+    const { data: inscriptionsData } = await supabase.from('inscriptions').select('classe_id').eq('eleve_id', eleveId)
+    const classeIds = inscriptionsData?.map((i: {classe_id: string}) => i.classe_id) || []
+
     const [
       { data: enfantData },
       { data: classesData },
@@ -86,11 +101,10 @@ export default function EspaceParentPage() {
       { data: presencesData },
       { data: reponsesData },
       { data: devoirsData },
+      { data: annoncesData },
     ] = await Promise.all([
       supabase.from('profiles').select('*').eq('id', eleveId).single(),
-      supabase.from('classes')
-        .select('*')
-        .in('id', (await supabase.from('inscriptions').select('classe_id').eq('eleve_id', eleveId)).data?.map((i: {classe_id: string}) => i.classe_id) || []),
+      supabase.from('classes').select('*').in('id', classeIds),
       supabase.from('bulletins')
         .select('*, matieres:bulletin_matieres(*)')
         .eq('eleve_id', eleveId)
@@ -110,8 +124,16 @@ export default function EspaceParentPage() {
       supabase.from('contenus_classe')
         .select('*, classe:classes(nom)')
         .eq('type', 'travail_a_faire')
-        .in('classe_id', (await supabase.from('inscriptions').select('classe_id').eq('eleve_id', eleveId)).data?.map((i: {classe_id: string}) => i.classe_id) || [])
+        .in('classe_id', classeIds)
         .order('created_at', { ascending: false }),
+      classeIds.length > 0
+        ? supabase.from('annonces_classe')
+            .select('*, classe:classes(nom)')
+            .in('classe_id', classeIds)
+            .order('epingler', { ascending: false })
+            .order('created_at', { ascending: false })
+            .limit(10)
+        : Promise.resolve({ data: [] }),
     ])
 
     setEnfant(enfantData)
@@ -120,6 +142,7 @@ export default function EspaceParentPage() {
     setPresences(presencesData || [])
     setReponses(reponsesData || [])
     setDevoirs(devoirsData || [])
+    setAnnonces(annoncesData || [])
     setChargement(false)
   }
 
@@ -283,6 +306,38 @@ export default function EspaceParentPage() {
               </div>
               <ChevronRight size={18} className="text-gray-300 group-hover:text-indigo-400 shrink-0" />
             </Link>
+
+            {/* Annonces de la classe */}
+            {annonces.length > 0 && (
+              <div className="bg-white rounded-xl border border-gray-100 shadow-sm p-5">
+                <h2 className="font-semibold text-gray-800 flex items-center gap-2 mb-3">
+                  <Megaphone size={18} className="text-blue-500" />
+                  Annonces &amp; rappels
+                </h2>
+                <ul className="space-y-2">
+                  {annonces.slice(0, 5).map(a => {
+                    const cfg = {
+                      annonce: { icon: <Megaphone size={14} />, bg: 'bg-blue-50', text: 'text-blue-700', border: 'border-blue-100' },
+                      rappel:  { icon: <Bell size={14} />,     bg: 'bg-amber-50', text: 'text-amber-700', border: 'border-amber-100' },
+                      note:    { icon: <StickyNote size={14} />, bg: 'bg-green-50', text: 'text-green-700', border: 'border-green-100' },
+                    }[a.type]
+                    return (
+                      <li key={a.id} className={`flex items-start gap-3 ${cfg.bg} border ${cfg.border} rounded-xl px-4 py-3`}>
+                        <span className={`mt-0.5 shrink-0 ${cfg.text}`}>{cfg.icon}</span>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            {a.epingler && <span className="text-xs font-bold text-rose-500">📌</span>}
+                            <p className={`font-semibold text-sm ${cfg.text}`}>{a.titre}</p>
+                          </div>
+                          {a.contenu && <p className="text-xs text-gray-500 mt-0.5">{a.contenu}</p>}
+                          <p className="text-xs text-gray-400 mt-1">{(a.classe as {nom: string} | undefined)?.nom} · {new Date(a.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' })}</p>
+                        </div>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )}
 
             {/* Derniers bulletins */}
             {bulletins.length > 0 && (
