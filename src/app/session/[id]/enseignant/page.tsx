@@ -442,20 +442,28 @@ function DashboardSession({
     <div className="p-6 space-y-5">
       {/* Lien vidéo flottant */}
       {session.daily_room_url && (
-        <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-5 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-indigo-600/40 rounded-lg flex items-center justify-center">
-              <Video size={16} className="text-indigo-300" />
+        <div className="bg-indigo-600/20 border border-indigo-500/30 rounded-2xl px-5 py-3 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-indigo-600/40 rounded-lg flex items-center justify-center">
+                <Video size={16} className="text-indigo-300" />
+              </div>
+              <div>
+                <p className="text-white text-sm font-semibold">Visioconférence Jitsi Meet</p>
+                <p className="text-indigo-400 text-xs truncate max-w-xs">{session.daily_room_url}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-white text-sm font-semibold">Visioconférence</p>
-              <p className="text-indigo-400 text-xs truncate max-w-xs">{session.daily_room_url}</p>
-            </div>
+            <a href={session.daily_room_url} target="_blank" rel="noopener noreferrer"
+              className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
+              <ExternalLink size={14} /> Ouvrir
+            </a>
           </div>
-          <a href={session.daily_room_url} target="_blank" rel="noopener noreferrer"
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl text-sm font-semibold transition shrink-0">
-            <ExternalLink size={14} /> Ouvrir
-          </a>
+          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-3 py-2 flex items-start gap-2">
+            <span className="text-amber-400 text-sm shrink-0">💡</span>
+            <p className="text-amber-200 text-xs">
+              Sur l&apos;écran Jitsi, cliquez sur <strong>&quot;Je suis l&apos;hôte&quot;</strong> pour entrer dans la salle. Les élèves doivent faire pareil.
+            </p>
+          </div>
         </div>
       )}
 
