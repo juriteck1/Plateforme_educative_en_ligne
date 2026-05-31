@@ -343,12 +343,16 @@ export default function SalleElevePage() {
 
             {/* Bouton vidéo */}
             {session.daily_room_url && (
-              <a href={session.daily_room_url} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition shadow-md shadow-indigo-100">
-                <Video size={15} />
-                <span className="hidden sm:inline">Vidéo</span>
-                <ExternalLink size={12} className="opacity-70" />
-              </a>
+              <div className="flex items-center gap-2">
+                <a href={session.daily_room_url} target="_blank" rel="noopener noreferrer"
+                  className="flex items-center gap-1.5 bg-indigo-600 text-white px-3 sm:px-4 py-2 rounded-xl font-bold text-sm hover:bg-indigo-700 transition shadow-md shadow-indigo-100"
+                  title='Sur Jitsi, clique sur "Je suis l&apos;hôte" pour entrer'>
+                  <Video size={15} />
+                  <span className="hidden sm:inline">Vidéo</span>
+                  <ExternalLink size={12} className="opacity-70" />
+                </a>
+                <span className="text-xs text-indigo-400 hidden md:inline">💡 Clique &quot;Je suis l&apos;hôte&quot; sur Jitsi</span>
+              </div>
             )}
 
             {/* Bouton quitter */}
