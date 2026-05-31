@@ -88,6 +88,7 @@ export interface ContenuClasse {
   id: string
   classe_id: string
   enseignant_id: string
+  session_id: string | null
   type: 'avant_cours' | 'travail_a_faire'
   titre: string
   contenu: string | null
@@ -161,4 +162,6 @@ export interface Bulletin {
   enseignant?: Profile
   classe?: Classe
   matieres?: BulletinMatiere[]
+}
+ieres?: BulletinMatiere[]
 }
